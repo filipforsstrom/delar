@@ -21,13 +21,20 @@ function init()
     is_playing = true
     engine.set_num_slices(num_steps)
 
-    for i = 1, 128 do
-        steps[i] = false
+    -- for i = 1, 128 do
+    --     steps[i] = false
+    -- end
+
+    for i = 1, num_steps do
+        steps[i] = {
+            enabled = false,
+            altered = false
+        }
     end
 
-    steps[1] = true
+    steps[1].enabled = true
 
-    steps[10] = true
+    steps[10].enabled = true
 
     for i = 1, 8 do
         for j = 1, 16 do
@@ -43,7 +50,11 @@ function init()
     end
 
     init_params()
-    params:bang()
+
+    -- params:bang() -- will make all steps altered!
+    -- for i = 1, #steps do
+    --     steps[i].altered = false
+    -- end
 
     screen_dirty = true
     screen_clock = clock.run(screen_redraw_clock)
@@ -132,13 +143,37 @@ function init_params()
         params:add_group("step " .. i, num_synth_params)
         params:hide("step " .. i)
         params:add_control("attack" .. i, "attack", attack)
+        params:set_action("attack" .. i, function(x)
+            steps[i].altered = true
+        end)
         params:add_control("length" .. i, "length", length)
+        params:set_action("length" .. i, function(x)
+            steps[i].altered = true
+        end)
         params:add_control("level" .. i, "level", level)
+        params:set_action("level" .. i, function(x)
+            steps[i].altered = true
+        end)
         params:add_control("randFreq" .. i, "rand freq", randFreq)
+        params:set_action("randFreq" .. i, function(x)
+            steps[i].altered = true
+        end)
         params:add_control("randLengthAmount" .. i, "rand length", randLengthAmount)
+        params:set_action("randLengthAmount" .. i, function(x)
+            steps[i].altered = true
+        end)
         params:add_control("randPanAmount" .. i, "rand pan", randPanAmount)
+        params:set_action("randPanAmount" .. i, function(x)
+            steps[i].altered = true
+        end)
         params:add_control("rate" .. i, "rate", playbackRate)
+        params:set_action("rate" .. i, function(x)
+            steps[i].altered = true
+        end)
         params:add_control("release" .. i, "release", release)
+        params:set_action("release" .. i, function(x)
+            steps[i].altered = true
+        end)
     end
 end
 
@@ -204,7 +239,7 @@ end
 function get_active_steps(steps)
     local active_steps = {}
     for i = 1, #steps do
-        if steps[i] then
+        if steps[i].enabled then
             table.insert(active_steps, i)
         end
     end
@@ -362,7 +397,7 @@ end
 
 function short_press(x, y) -- define a short press
     local index = (y - 1) * 16 + x -- calculate the index in steps based on the x and y coordinates
-    steps[index] = not steps[index] -- toggle the boolean value in steps at the calculated index
+    steps[index].enabled = not steps[index].enabled -- toggle the boolean value in steps at the calculated index
     grid_dirty = true
 end
 
@@ -380,7 +415,11 @@ function grid_redraw()
     g:all(0)
 
     for i = 1, #steps do
-        if steps[i] then
+        if steps[i].altered then
+            g:led(leds[i].x, leds[i].y, 5)
+        end
+
+        if steps[i].enabled then
             g:led(leds[i].x, leds[i].y, 15)
         end
     end
