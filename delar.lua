@@ -4,6 +4,7 @@ g = grid.connect()
 leds = {}
 keys_counter = {}
 
+sample_path = paths.home .. "/dust/audio/delar/"
 is_playing = false
 playing_step = 0
 playing_step_led_brightness = 15
@@ -29,7 +30,7 @@ defaults = {
 }
 
 function init()
-    engine.setSample("/home/we/dust/audio/piano1.wav")
+    -- engine.setSample(sample_path .. "piano1.wav")
     is_playing = true
     engine.set_num_slices(num_steps)
 
@@ -63,9 +64,7 @@ function init()
     init_params()
 
     params:bang() -- will make all steps altered!
-    -- for i = 1, #steps do
-    --     steps[i].altered = false
-    -- end
+    params:set("enabled89", 1)
 
     screen_dirty = true
     screen_clock = clock.run(screen_redraw_clock)
@@ -77,6 +76,11 @@ function init()
 end
 
 function init_params()
+    params:add_file("sample", "sample", sample_path)
+    params:set_action("sample", function(x)
+        engine.setSample(x)
+    end)
+
     attack = controlspec.def {
         min = 0.01, -- the minimum value
         max = 1.0, -- the maximum value
@@ -159,7 +163,7 @@ function init_params()
         end)
         params:add_number("altered" .. i, "altered", 0, 1, 0)
         params:set_action("altered" .. i, function(x)
-            print("altered" .. i .. " changed to " .. x)
+            -- print("altered" .. i .. " changed to " .. x)
             if params_not_default(i) then
                 steps[i].altered = true
             else
@@ -457,7 +461,7 @@ end
 
 function long_press(x, y) -- define a long press
     clock.sleep(0.5) -- a long press waits for a half-second...
-    print("long press")
+    -- print("long press")
     keys_counter[x][y] = nil -- clear the counter
 end
 
