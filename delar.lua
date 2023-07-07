@@ -32,9 +32,8 @@ function init()
         }
     end
 
-    steps[1].enabled = true
-
-    steps[10].enabled = true
+    -- steps[1].enabled = true
+    -- steps[10].enabled = true
 
     for i = 1, 8 do
         for j = 1, 16 do
@@ -51,7 +50,7 @@ function init()
 
     init_params()
 
-    -- params:bang() -- will make all steps altered!
+    params:bang() -- will make all steps altered!
     -- for i = 1, #steps do
     --     steps[i].altered = false
     -- end
@@ -142,37 +141,45 @@ function init_params()
     for i = 1, num_steps do
         params:add_group("step " .. i, num_synth_params)
         params:hide("step " .. i)
+        params:add_number("enabled" .. i, "enabled", 0, 1, 0)
+        params:set_action("enabled" .. i, function(x)
+            steps[i].enabled = (x == 1)
+        end)
+        params:add_number("altered" .. i, "altered", 0, 1, 0)
+        params:set_action("altered" .. i, function(x)
+            -- steps[i].altered = (x == 1)
+        end)
         params:add_control("attack" .. i, "attack", attack)
         params:set_action("attack" .. i, function(x)
-            steps[i].altered = true
+            params:set("altered" .. i, 1)
         end)
         params:add_control("length" .. i, "length", length)
         params:set_action("length" .. i, function(x)
-            steps[i].altered = true
+            params:set("altered" .. i, 1)
         end)
         params:add_control("level" .. i, "level", level)
         params:set_action("level" .. i, function(x)
-            steps[i].altered = true
+            params:set("altered" .. i, 1)
         end)
         params:add_control("randFreq" .. i, "rand freq", randFreq)
         params:set_action("randFreq" .. i, function(x)
-            steps[i].altered = true
+            params:set("altered" .. i, 1)
         end)
         params:add_control("randLengthAmount" .. i, "rand length", randLengthAmount)
         params:set_action("randLengthAmount" .. i, function(x)
-            steps[i].altered = true
+            params:set("altered" .. i, 1)
         end)
         params:add_control("randPanAmount" .. i, "rand pan", randPanAmount)
         params:set_action("randPanAmount" .. i, function(x)
-            steps[i].altered = true
+            params:set("altered" .. i, 1)
         end)
         params:add_control("rate" .. i, "rate", playbackRate)
         params:set_action("rate" .. i, function(x)
-            steps[i].altered = true
+            params:set("altered" .. i, 1)
         end)
         params:add_control("release" .. i, "release", release)
         params:set_action("release" .. i, function(x)
-            steps[i].altered = true
+            params:set("altered" .. i, 1)
         end)
     end
 end
@@ -399,7 +406,7 @@ end
 
 function short_press(x, y) -- define a short press
     local index = (y - 1) * 16 + x -- calculate the index in steps based on the x and y coordinates
-    steps[index].enabled = not steps[index].enabled -- toggle the boolean value in steps at the calculated index
+    params:set("enabled" .. index, params:get("enabled" .. index) ~ 1)
     grid_dirty = true
 end
 
