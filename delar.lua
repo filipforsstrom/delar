@@ -11,10 +11,22 @@ sequence = {}
 sequence_position = 1
 steps = {}
 num_steps = 128
-num_synth_params = 8
+num_synth_params = 11
 selected_step = 1
 selected_screen_param = 1
 num_screen_params = 9
+
+defaults = {
+    attack = 0.01,
+    length = 0,
+    level = 0.5,
+    playbackRate = 1,
+    randFreq = 1,
+    randLengthAmount = 0,
+    randLengthUnquantized = 0,
+    randPanAmount = 0,
+    release = 0.01
+}
 
 function init()
     engine.setSample("/home/we/dust/audio/piano1.wav")
@@ -70,7 +82,7 @@ function init_params()
         max = 1.0, -- the maximum value
         warp = 'lin', -- a shaping option for the raw value
         step = 0.01, -- output value quantization
-        default = 0.01, -- default value
+        default = defaults.attack, -- default value
         quantum = 0.002, -- each delta will change raw value by this much
         wrap = false -- wrap around on overflow (true) or clamp (false)
     }
@@ -79,7 +91,7 @@ function init_params()
         max = 100.0,
         warp = 'lin',
         step = 0.01,
-        default = 0.0,
+        default = defaults.length,
         quantum = 0.002,
         wrap = false
     }
@@ -88,7 +100,7 @@ function init_params()
         max = 1.0,
         warp = 'lin',
         step = 0.01,
-        default = 0.5,
+        default = defaults.level,
         quantum = 0.002,
         wrap = false
     }
@@ -97,7 +109,7 @@ function init_params()
         max = 32.0,
         warp = 'lin',
         step = 0.01,
-        default = 1.0,
+        default = defaults.playbackRate,
         quantum = 0.002,
         wrap = false
     }
@@ -106,7 +118,7 @@ function init_params()
         max = 2.0,
         warp = 'lin',
         step = 0.01,
-        default = 1.0,
+        default = defaults.randFreq,
         quantum = 0.002,
         wrap = false
     }
@@ -115,7 +127,7 @@ function init_params()
         max = 100.0,
         warp = 'lin',
         step = 0.01,
-        default = 0.0,
+        default = defaults.randLengthAmount,
         quantum = 0.002,
         wrap = false
     }
@@ -124,7 +136,7 @@ function init_params()
         max = 100.0,
         warp = 'lin',
         step = 0.01,
-        default = 0.0,
+        default = defaults.randPanAmount,
         quantum = 0.002,
         wrap = false
     }
@@ -133,58 +145,99 @@ function init_params()
         max = 1.0,
         warp = 'lin',
         step = 0.01,
-        default = 0.01,
+        default = defaults.release,
         quantum = 0.002,
         wrap = false
     }
 
     for i = 1, num_steps do
         params:add_group("step " .. i, num_synth_params)
-        params:hide("step " .. i)
+        -- params:hide("step " .. i)
         params:add_number("enabled" .. i, "enabled", 0, 1, 0)
         params:set_action("enabled" .. i, function(x)
             steps[i].enabled = (x == 1)
         end)
         params:add_number("altered" .. i, "altered", 0, 1, 0)
         params:set_action("altered" .. i, function(x)
-            -- steps[i].altered = (x == 1)
+            print("altered" .. i .. " changed to " .. x)
+            if params_not_default(i) then
+                steps[i].altered = true
+            else
+                params:set("altered" .. i, 0)
+                steps[i].altered = false
+            end
         end)
         params:add_control("attack" .. i, "attack", attack)
         params:set_action("attack" .. i, function(x)
-            params:set("altered" .. i, 1)
+            -- print("attack" .. i .. " changed to " .. x)
+            params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
         params:add_control("length" .. i, "length", length)
         params:set_action("length" .. i, function(x)
-            params:set("altered" .. i, 1)
+            params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
         params:add_control("level" .. i, "level", level)
         params:set_action("level" .. i, function(x)
-            params:set("altered" .. i, 1)
+            params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
         params:add_control("randFreq" .. i, "rand freq", randFreq)
         params:set_action("randFreq" .. i, function(x)
-            params:set("altered" .. i, 1)
+            params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
         params:add_control("randLengthAmount" .. i, "rand length", randLengthAmount)
         params:set_action("randLengthAmount" .. i, function(x)
-            params:set("altered" .. i, 1)
+            params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_number("randLengthUnquantized" .. i, "quantize rand length", 0, 1, 1)
+        params:add_number("randLengthUnquantized" .. i, "unquantize rand length", 0, 1, 0)
         params:set_action("randLengthAmount" .. i, function(x)
-            params:set("altered" .. i, 1)
+            params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
         params:add_control("randPanAmount" .. i, "rand pan", randPanAmount)
         params:set_action("randPanAmount" .. i, function(x)
-            params:set("altered" .. i, 1)
+            params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
         params:add_control("rate" .. i, "rate", playbackRate)
         params:set_action("rate" .. i, function(x)
-            params:set("altered" .. i, 1)
+            params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
         params:add_control("release" .. i, "release", release)
         params:set_action("release" .. i, function(x)
-            params:set("altered" .. i, 1)
+            params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
+    end
+end
+
+function params_not_default(step)
+    local attack = params:get("attack" .. step)
+    local length = params:get("length" .. step)
+    local level = params:get("level" .. step)
+    local randFreq = params:get("randFreq" .. step)
+    local randLengthAmount = params:get("randLengthAmount" .. step)
+    local randLengthUnquantized = params:get("randLengthUnquantized" .. step)
+    local randPanAmount = params:get("randPanAmount" .. step)
+    local rate = params:get("rate" .. step)
+    local release = params:get("release" .. step)
+
+    if attack ~= defaults.attack then
+        return true
+    elseif length ~= defaults.length then
+        return true
+    elseif level ~= defaults.level then
+        return true
+    elseif randFreq ~= defaults.randFreq then
+        return true
+    elseif randLengthAmount ~= defaults.randLengthAmount then
+        return true
+    elseif randLengthUnquantized ~= defaults.randLengthUnquantized then
+        return true
+    elseif randPanAmount ~= defaults.randPanAmount then
+        return true
+    elseif rate ~= defaults.playbackRate then
+        return true
+    elseif release ~= defaults.release then
+        return true
+    else
+        return false
     end
 end
 
@@ -429,7 +482,7 @@ function grid_redraw()
 
     for i = 1, #steps do
         if steps[i].altered then
-            g:led(leds[i].x, leds[i].y, 5)
+            g:led(leds[i].x, leds[i].y, 8)
         end
 
         if steps[i].enabled then
