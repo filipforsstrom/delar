@@ -254,9 +254,11 @@ function send_next_step(step)
     local rate = params:get("rate" .. step)
     local randFreq = params:get("randFreq" .. step)
     local randLengthAmount = params:get("randLengthAmount" .. step)
+    local randLengthUnquantized = false;
     local randPanAmount = params:get("randPanAmount" .. step)
     local release = params:get("release" .. step)
-    engine.set_all(step, attack, length, level, rate, randFreq, randLengthAmount, randPanAmount, release)
+    engine.set_all(step, attack, length, level, rate, randFreq, randLengthAmount, randLengthUnquantized, randPanAmount,
+        release)
 end
 
 function enc(n, d)

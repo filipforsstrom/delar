@@ -31,7 +31,7 @@ Engine_DelarSequencer : CroneEngine {
 			kernel.setSlice(slice);
 		});
 
-		this.addCommand(\set_all, "iffffffff", { arg msg;
+		this.addCommand(\set_all, "iffffffTff", { arg msg;
 			var slice = msg[1] - 1;
 			var attack = msg[2];
 			var length = msg[3];
@@ -39,9 +39,10 @@ Engine_DelarSequencer : CroneEngine {
 			var playbackRate = msg[5];
 			var randFreq = msg[6];
 			var randLengthAmount = msg[7];
-			var randPanAmount = msg[8];
-			var release = msg[9];
-			kernel.setAll(slice, attack, length, level, playbackRate, randFreq, randLengthAmount, randPanAmount, release);
+			var randLengthUnquantized = false;
+			var randPanAmount = msg[9];
+			var release = msg[10];
+			kernel.setAll(slice, attack, length, level, playbackRate, randFreq, randLengthAmount, randLengthUnquantized, randPanAmount, release);
 		});
 
 	} // alloc
