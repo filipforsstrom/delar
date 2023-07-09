@@ -15,7 +15,7 @@ num_steps = 128
 num_synth_params = 11
 selected_step = 1
 selected_screen_param = 1
-num_screen_params = 9
+num_screen_params = 10
 
 defaults = {
     attack = 0.01,
@@ -30,10 +30,6 @@ defaults = {
 }
 
 function init()
-    -- engine.setSample(sample_path .. "piano1.wav")
-    is_playing = true
-    engine.set_num_slices(num_steps)
-
     -- for i = 1, 128 do
     --     steps[i] = false
     -- end
@@ -63,8 +59,11 @@ function init()
 
     init_params()
 
-    params:bang() -- will make all steps altered!
+    params:bang()
     params:set("enabled89", 1)
+    engine.setSample(sample_path .. "piano1.wav")
+    is_playing = true
+    engine.set_num_slices(num_steps)
 
     screen_dirty = true
     screen_clock = clock.run(screen_redraw_clock)
@@ -322,7 +321,7 @@ function send_next_step(step)
     local rate = params:get("rate" .. step)
     local randFreq = params:get("randFreq" .. step)
     local randLengthAmount = params:get("randLengthAmount" .. step)
-    local randLengthUnquantized = false;
+    local randLengthUnquantized = 0;
     local randPanAmount = params:get("randPanAmount" .. step)
     local release = params:get("release" .. step)
     engine.set_all(step, attack, length, level, rate, randFreq, randLengthAmount, randLengthUnquantized, randPanAmount,
@@ -350,11 +349,13 @@ function enc(n, d)
             params:set("randLengthAmount" .. selected_step,
                 util.clamp(params:get("randLengthAmount" .. selected_step) + d / 10, 0, 100))
         elseif selected_screen_param == 8 then
+            params:set("randLengthUnquantized" .. selected_step,
+                util.clamp(params:get("randLengthUnquantized" .. selected_step) + d / 1, 0, 1))
+        elseif selected_screen_param == 9 then
             params:set("randPanAmount" .. selected_step,
                 util.clamp(params:get("randPanAmount" .. selected_step) + d / 10, 0, 1))
-        elseif selected_screen_param == 9 then
+        elseif selected_screen_param == 10 then
             params:set("release" .. selected_step, util.clamp(params:get("release" .. selected_step) + d / 100, 0.01, 1))
-
         end
     end
     screen_dirty = true
@@ -431,14 +432,20 @@ function redraw()
 
     screen.level(selected_screen_param == 8 and 15 or 2)
     screen.move(105, 25)
-    screen.text_right("rPan:")
+    screen.text_right("rLenQ:")
     screen.move(110, 25)
-    screen.text(params:get("randPanAmount" .. selected_step))
+    screen.text(params:get("randLengthUnquantized" .. selected_step))
 
     screen.level(selected_screen_param == 9 and 15 or 2)
     screen.move(105, 35)
-    screen.text_right("rel:")
+    screen.text_right("rPan:")
     screen.move(110, 35)
+    screen.text(params:get("randPanAmount" .. selected_step))
+
+    screen.level(selected_screen_param == 10 and 15 or 2)
+    screen.move(105, 45)
+    screen.text_right("rel:")
+    screen.move(110, 45)
     screen.text(params:get("release" .. selected_step))
 
     screen_dirty = false
