@@ -219,6 +219,7 @@ DelarSequencer {
 	setSample { arg path;
 		var buf;
 		this.stop();
+		sample.free;
 		buf = Buffer.read(server, path, action: {
 			("Sample loaded.").postln;
 			sample = buf;
