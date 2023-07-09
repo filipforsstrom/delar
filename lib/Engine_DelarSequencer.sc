@@ -31,7 +31,7 @@ Engine_DelarSequencer : CroneEngine {
 			kernel.setSlice(slice);
 		});
 
-		this.addCommand(\set_all, "iffffffTff", { arg msg;
+		this.addCommand(\set_all, "iffffffiff", { arg msg;
 			var slice = msg[1] - 1;
 			var attack = msg[2];
 			var length = msg[3];
