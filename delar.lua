@@ -381,23 +381,13 @@ function send_next_step(step)
                              p.release.name}
     local engine_params = {}
     for i, param in ipairs(params_to_check) do
-        local value = params:get(param)
-        if param_not_default(param, step) then
-            value = params:get(param .. step)
+        local value = params:get(param .. step)
+        if value == p[param].default then
+            value = params:get(param)
         end
         engine_params[i] = value
     end
     engine.set_all(step, table.unpack(engine_params))
-end
-
-function param_not_default(param, step)
-    local default = defaults[param]
-    local value = params:get(param .. step)
-    if value ~= default then
-        return true
-    else
-        return false
-    end
 end
 
 function enc(n, d)
