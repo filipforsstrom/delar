@@ -39,9 +39,16 @@ Engine_DelarSequencer : CroneEngine {
 			var playbackRate = msg[5];
 			var randFreq = msg[6];
 			var randStartPosition = msg[7];
-			var randEndPosition = false;
+			var randEndPosition = msg[8];
 			var randPanAmount = msg[9];
 			var release = msg[10];
+
+            if (randEndPosition == 0, {
+                randEndPosition = false;
+            } , {
+                randEndPosition = true;
+            });
+            
 			kernel.setAll(slice, attack, length, level, playbackRate, randFreq, randStartPosition, randEndPosition, randPanAmount, release);
 		});
 
