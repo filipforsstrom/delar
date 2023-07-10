@@ -246,7 +246,6 @@ DelarSequencer {
 		randStartPosition = rStartPos;
 		randEndPosition = rEndPos;
 		randPanAmount = (rPan * 0.01).max(0).min(1.0);
-		[randPanAmount].postln;
 		release = rel;
 	}
 
