@@ -17,18 +17,6 @@ selected_step = 1
 selected_screen_param = 1
 num_screen_params = 10
 
-p_names = {
-    attack = "attack",
-    length = "length",
-    level = "level",
-    playback_rate = "playback_rate",
-    rand_freq = "rand_freq",
-    rand_length_amount = "rand_length_amount",
-    rand_length_unquantized = "rand_length_unquantized",
-    rand_pan_amount = "rand_pan_amount",
-    release = "release"
-}
-
 p = {
     attack = {
         name = "attack",
