@@ -38,11 +38,11 @@ Engine_DelarSequencer : CroneEngine {
 			var level = msg[4];
 			var playbackRate = msg[5];
 			var randFreq = msg[6];
-			var randLengthAmount = msg[7];
-			var randLengthUnquantized = false;
+			var randStartPosition = msg[7];
+			var randEndPosition = false;
 			var randPanAmount = msg[9];
 			var release = msg[10];
-			kernel.setAll(slice, attack, length, level, playbackRate, randFreq, randLengthAmount, randLengthUnquantized, randPanAmount, release);
+			kernel.setAll(slice, attack, length, level, playbackRate, randFreq, randStartPosition, randEndPosition, randPanAmount, release);
 		});
 
 	} // alloc
