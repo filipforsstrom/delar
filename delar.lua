@@ -56,18 +56,6 @@ p = {
     }
 }
 
-defaults = {
-    attack = 0.01,
-    length = 0,
-    level = 0.5,
-    playback_rate = 1.0,
-    rand_freq = 1,
-    rand_length_amount = 0,
-    rand_length_unquantized = 0,
-    rand_pan_amount = 0,
-    release = 0.01
-}
-
 function init()
     for i = 1, num_steps do
         steps[i] = {
