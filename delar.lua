@@ -21,7 +21,7 @@ defaults = {
     attack = 0.01,
     length = 0,
     level = 0.5,
-    playbackRate = 1,
+    playback_rate = 1.0,
     randFreq = 1,
     randLengthAmount = 0,
     randLengthUnquantized = 0,
@@ -111,9 +111,9 @@ function init_params()
         min = 0.25,
         max = 32.0,
         warp = 'lin',
-        step = 0.01,
-        default = defaults.playbackRate,
-        quantum = 0.002,
+        step = 0.0001,
+        default = defaults.playback_rate,
+        quantum = 0.0001,
         wrap = false
     }
     randFreq = controlspec.def {
@@ -152,6 +152,16 @@ function init_params()
         quantum = 0.002,
         wrap = false
     }
+
+    params:add_control("attack", "attack", attack)
+    params:add_control("length", "length", length)
+    params:add_control("level", "level", level)
+    params:add_control("randFreq", "rand freq", randFreq)
+    params:add_control("randLengthAmount", "rand length", randLengthAmount)
+    params:add_number("randLengthUnquantized", "unquantize rand length", 0, 1, 0)
+    params:add_control("randPanAmount", "rand pan", randPanAmount)
+    params:add_control("playback_rate", "rate", playbackRate)
+    params:add_control("release", "release", release)
 
     for i = 1, num_steps do
         params:add_group("step " .. i, num_synth_params)
@@ -199,8 +209,8 @@ function init_params()
         params:set_action("randPanAmount" .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control("rate" .. i, "rate", playbackRate)
-        params:set_action("rate" .. i, function(x)
+        params:add_control("playback_rate" .. i, "rate", playbackRate)
+        params:set_action("playback_rate" .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
         params:add_control("release" .. i, "release", release)
@@ -218,7 +228,7 @@ function params_not_default(step)
     local randLengthAmount = params:get("randLengthAmount" .. step)
     local randLengthUnquantized = params:get("randLengthUnquantized" .. step)
     local randPanAmount = params:get("randPanAmount" .. step)
-    local rate = params:get("rate" .. step)
+    local rate = params:get("playback_rate" .. step)
     local release = params:get("release" .. step)
 
     if attack ~= defaults.attack then
@@ -314,18 +324,54 @@ function get_active_steps(steps)
 end
 
 function send_next_step(step)
-    -- print(step)
-    local attack = params:get("attack" .. step)
-    local length = params:get("length" .. step)
-    local level = params:get("level" .. step)
-    local rate = params:get("rate" .. step)
-    local randFreq = params:get("randFreq" .. step)
-    local randLengthAmount = params:get("randLengthAmount" .. step)
+    local attack = params:get("attack")
+    if param_not_default("attack", step) then
+        attack = params:get("attack" .. step)
+    end
+    local length = params:get("length")
+    if param_not_default("length", step) then
+        length = params:get("length" .. step)
+    end
+    local level = params:get("level")
+    if param_not_default("level", step) then
+        level = params:get("level" .. step)
+    end
+    local rate = params:get("playback_rate")
+    if param_not_default("playback_rate", step) then
+        rate = params:get("playback_rate" .. step)
+    end
+    local randFreq = params:get("randFreq")
+    if param_not_default("randFreq", step) then
+        randFreq = params:get("randFreq" .. step)
+    end
+    local randLengthAmount = params:get("randLengthAmount")
+    if param_not_default("randLengthAmount", step) then
+        randLengthAmount = params:get("randLengthAmount" .. step)
+    end
     local randLengthUnquantized = 0;
-    local randPanAmount = params:get("randPanAmount" .. step)
-    local release = params:get("release" .. step)
+    if param_not_default("randLengthUnquantized", step) then
+        randLengthUnquantized = params:get("randLengthUnquantized" .. step)
+    end
+    local randPanAmount = params:get("randPanAmount")
+    if param_not_default("randPanAmount", step) then
+        randPanAmount = params:get("randPanAmount" .. step)
+    end
+    local release = params:get("release")
+    if param_not_default("release", step) then
+        release = params:get("release" .. step)
+    end
     engine.set_all(step, attack, length, level, rate, randFreq, randLengthAmount, randLengthUnquantized, randPanAmount,
         release)
+end
+
+function param_not_default(param, step)
+    local default = defaults[param]
+    local value = params:get(param .. step)
+    if value ~= default then
+        return true
+    else
+        return false
+    end
 end
 
 function enc(n, d)
@@ -342,7 +388,8 @@ function enc(n, d)
         elseif selected_screen_param == 4 then
             params:set("level" .. selected_step, util.clamp(params:get("level" .. selected_step) + d / 10, 0, 1))
         elseif selected_screen_param == 5 then
-            params:set("rate" .. selected_step, util.clamp(params:get("rate" .. selected_step) + d / 100, 0.25, 32))
+            params:set("playback_rate" .. selected_step,
+                util.clamp(params:get("playback_rate" .. selected_step) + d / 100, 0.25, 32))
         elseif selected_screen_param == 6 then
             params:set("randFreq" .. selected_step, util.clamp(params:get("randFreq" .. selected_step) + d / 10, 0, 100))
         elseif selected_screen_param == 7 then
@@ -416,7 +463,7 @@ function redraw()
     screen.move(55, 45)
     screen.text_right("rate:")
     screen.move(60, 45)
-    screen.text(params:get("rate" .. selected_step))
+    screen.text(params:get("playback_rate" .. selected_step))
 
     screen.level(selected_screen_param == 6 and 15 or 2)
     screen.move(55, 55)
