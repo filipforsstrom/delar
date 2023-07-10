@@ -273,37 +273,14 @@ function init_params()
 end
 
 function params_not_default(step)
-    local attack = params:get(p.attack.name .. step)
-    local length = params:get(p.length.name .. step)
-    local level = params:get(p.level.name .. step)
-    local rand_freq = params:get(p.rand_freq.name .. step)
-    local rand_length_amount = params:get(p.rand_length_amount.name .. step)
-    local rand_length_unquantized = params:get(p.rand_length_unquantized.name .. step)
-    local rand_pan_amount = params:get(p.rand_pan_amount.name .. step)
-    local rate = params:get(p.playback_rate.name .. step)
-    local release = params:get(p.release.name .. step)
-
-    if attack ~= p.attack.default then
-        return true
-    elseif length ~= p.length.default then
-        return true
-    elseif level ~= p.level.default then
-        return true
-    elseif rand_freq ~= p.rand_freq.default then
-        return true
-    elseif rand_length_amount ~= p.rand_length_amount.default then
-        return true
-    elseif rand_length_unquantized ~= p.rand_length_unquantized.default then
-        return true
-    elseif rand_pan_amount ~= p.rand_pan_amount.default then
-        return true
-    elseif rate ~= p.playback_rate.default then
-        return true
-    elseif release ~= p.release.default then
-        return true
-    else
-        return false
+    local params_to_check = {p.attack, p.length, p.level, p.rand_freq, p.rand_length_amount, p.rand_length_unquantized,
+                             p.rand_pan_amount, p.playback_rate, p.release}
+    for _, param in ipairs(params_to_check) do
+        if params:get(param.name .. step) ~= param.default then
+            return true
+        end
     end
+    return false
 end
 
 function key(n, z)
