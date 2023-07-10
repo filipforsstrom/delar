@@ -29,6 +29,45 @@ p_names = {
     release = "release"
 }
 
+p = {
+    attack = {
+        name = "attack",
+        default = 0.01
+    },
+    length = {
+        name = "length",
+        default = 0
+    },
+    level = {
+        name = "level",
+        default = 0.5
+    },
+    playback_rate = {
+        name = "playback_rate",
+        default = 1.0
+    },
+    rand_freq = {
+        name = "rand_freq",
+        default = 1
+    },
+    rand_length_amount = {
+        name = "rand_length_amount",
+        default = 0
+    },
+    rand_length_unquantized = {
+        name = "rand_length_unquantized",
+        default = 0
+    },
+    rand_pan_amount = {
+        name = "rand_pan_amount",
+        default = 0
+    },
+    release = {
+        name = "release",
+        default = 0.01
+    }
+}
+
 defaults = {
     attack = 0.01,
     length = 0,
@@ -97,7 +136,7 @@ function init_params()
         max = 1.0, -- the maximum value
         warp = 'lin', -- a shaping option for the raw value
         step = 0.01, -- output value quantization
-        default = defaults.attack, -- default value
+        default = p.attack.default, -- default value
         quantum = 0.002, -- each delta will change raw value by this much
         wrap = false -- wrap around on overflow (true) or clamp (false)
     }
@@ -106,7 +145,7 @@ function init_params()
         max = 100.0,
         warp = 'lin',
         step = 0.01,
-        default = defaults.length,
+        default = p.length.default,
         quantum = 0.002,
         wrap = false
     }
@@ -115,7 +154,7 @@ function init_params()
         max = 1.0,
         warp = 'lin',
         step = 0.01,
-        default = defaults.level,
+        default = p.level.default,
         quantum = 0.002,
         wrap = false
     }
@@ -124,7 +163,7 @@ function init_params()
         max = 32.0,
         warp = 'lin',
         step = 0.0001,
-        default = defaults.playback_rate,
+        default = p.playback_rate.default,
         quantum = 0.0001,
         wrap = false
     }
@@ -133,7 +172,7 @@ function init_params()
         max = 2.0,
         warp = 'lin',
         step = 0.01,
-        default = defaults.rand_freq,
+        default = p.rand_freq.default,
         quantum = 0.002,
         wrap = false
     }
@@ -142,7 +181,7 @@ function init_params()
         max = 100.0,
         warp = 'lin',
         step = 0.01,
-        default = defaults.rand_length_amount,
+        default = p.rand_length_amount.default,
         quantum = 0.002,
         wrap = false
     }
@@ -151,7 +190,7 @@ function init_params()
         max = 100.0,
         warp = 'lin',
         step = 0.01,
-        default = defaults.rand_pan_amount,
+        default = p.rand_pan_amount.default,
         quantum = 0.002,
         wrap = false
     }
@@ -160,20 +199,20 @@ function init_params()
         max = 1.0,
         warp = 'lin',
         step = 0.01,
-        default = defaults.release,
+        default = p.release.default,
         quantum = 0.002,
         wrap = false
     }
 
-    params:add_control("attack", "attack", attack)
-    params:add_control("length", "length", length)
-    params:add_control("level", "level", level)
-    params:add_control("rand_freq", "rand freq", rand_freq)
-    params:add_control("rand_length_amount", "rand length", rand_length_amount)
-    params:add_number("rand_length_unquantized", "unquantize rand length", 0, 1, 0)
-    params:add_control("rand_pan_amount", "rand pan", rand_pan_amount)
-    params:add_control("playback_rate", "rate", playbackRate)
-    params:add_control("release", "release", release)
+    params:add_control(p.attack.name, "attack", attack)
+    params:add_control(p.length.name, "length", length)
+    params:add_control(p.level.name, "level", level)
+    params:add_control(p.rand_freq.name, "rand freq", rand_freq)
+    params:add_control(p.rand_length_amount.name, "rand length", rand_length_amount)
+    params:add_number(p.rand_length_unquantized.name, "unquantize rand length", 0, 1, p.rand_length_unquantized.default)
+    params:add_control(p.rand_pan_amount.name, "rand pan", rand_pan_amount)
+    params:add_control(p.playback_rate.name, "rate", playbackRate)
+    params:add_control(p.release.name, "release", release)
 
     for i = 1, num_steps do
         params:add_group("step " .. i, num_synth_params)
@@ -192,74 +231,75 @@ function init_params()
                 steps[i].altered = false
             end
         end)
-        params:add_control("attack" .. i, "attack", attack)
-        params:set_action("attack" .. i, function(x)
+        params:add_control(p.attack.name .. i, "attack", attack)
+        params:set_action(p.attack.name .. i, function(x)
             -- print("attack" .. i .. " changed to " .. x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control("length" .. i, "length", length)
-        params:set_action("length" .. i, function(x)
+        params:add_control(p.length.name .. i, "length", length)
+        params:set_action(p.length.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control("level" .. i, "level", level)
-        params:set_action("level" .. i, function(x)
+        params:add_control(p.level.name .. i, "level", level)
+        params:set_action(p.level.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control("rand_freq" .. i, "rand freq", rand_freq)
-        params:set_action("rand_freq" .. i, function(x)
+        params:add_control(p.rand_freq.name .. i, "rand freq", rand_freq)
+        params:set_action(p.rand_freq.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control("rand_length_amount" .. i, "rand length", rand_length_amount)
-        params:set_action("rand_length_amount" .. i, function(x)
+        params:add_control(p.rand_length_amount.name .. i, "rand length", rand_length_amount)
+        params:set_action(p.rand_length_amount.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_number("rand_length_unquantized" .. i, "unquantize rand length", 0, 1, 0)
-        params:set_action("rand_length_amount" .. i, function(x)
+        params:add_number(p.rand_length_unquantized.name .. i, "unquantize rand length", 0, 1,
+            p.rand_length_unquantized.default)
+        params:set_action(p.rand_length_amount.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control("rand_pan_amount" .. i, "rand pan", rand_pan_amount)
-        params:set_action("rand_pan_amount" .. i, function(x)
+        params:add_control(p.rand_pan_amount.name .. i, "rand pan", rand_pan_amount)
+        params:set_action(p.rand_pan_amount.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control("playback_rate" .. i, "rate", playbackRate)
-        params:set_action("playback_rate" .. i, function(x)
+        params:add_control(p.playback_rate.name .. i, "rate", playbackRate)
+        params:set_action(p.playback_rate.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control("release" .. i, "release", release)
-        params:set_action("release" .. i, function(x)
+        params:add_control(p.release.name .. i, "release", release)
+        params:set_action(p.release.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
     end
 end
 
 function params_not_default(step)
-    local attack = params:get("attack" .. step)
-    local length = params:get("length" .. step)
-    local level = params:get("level" .. step)
-    local rand_freq = params:get("rand_freq" .. step)
-    local rand_length_amount = params:get("rand_length_amount" .. step)
-    local rand_length_unquantized = params:get("rand_length_unquantized" .. step)
-    local rand_pan_amount = params:get("rand_pan_amount" .. step)
-    local rate = params:get("playback_rate" .. step)
-    local release = params:get("release" .. step)
+    local attack = params:get(p.attack.name .. step)
+    local length = params:get(p.length.name .. step)
+    local level = params:get(p.level.name .. step)
+    local rand_freq = params:get(p.rand_freq.name .. step)
+    local rand_length_amount = params:get(p.rand_length_amount.name .. step)
+    local rand_length_unquantized = params:get(p.rand_length_unquantized.name .. step)
+    local rand_pan_amount = params:get(p.rand_pan_amount.name .. step)
+    local rate = params:get(p.playback_rate.name .. step)
+    local release = params:get(p.release.name .. step)
 
-    if attack ~= defaults.attack then
+    if attack ~= p.attack.default then
         return true
-    elseif length ~= defaults.length then
+    elseif length ~= p.length.default then
         return true
-    elseif level ~= defaults.level then
+    elseif level ~= p.level.default then
         return true
-    elseif rand_freq ~= defaults.rand_freq then
+    elseif rand_freq ~= p.rand_freq.default then
         return true
-    elseif rand_length_amount ~= defaults.rand_length_amount then
+    elseif rand_length_amount ~= p.rand_length_amount.default then
         return true
-    elseif rand_length_unquantized ~= defaults.rand_length_unquantized then
+    elseif rand_length_unquantized ~= p.rand_length_unquantized.default then
         return true
-    elseif rand_pan_amount ~= defaults.rand_pan_amount then
+    elseif rand_pan_amount ~= p.rand_pan_amount.default then
         return true
-    elseif rate ~= defaults.playbackRate then
+    elseif rate ~= p.playback_rate.default then
         return true
-    elseif release ~= defaults.release then
+    elseif release ~= p.release.default then
         return true
     else
         return false
@@ -336,8 +376,9 @@ function get_active_steps(steps)
 end
 
 function send_next_step(step)
-    local params_to_check = {"attack", "length", "level", "playback_rate", "rand_freq", "rand_length_amount",
-                             "rand_length_unquantized", "rand_pan_amount", "release"}
+    local params_to_check = {p.attack.name, p.length.name, p.level.name, p.playback_rate.name, p.rand_freq.name,
+                             p.rand_length_amount.name, p.rand_length_unquantized.name, p.rand_pan_amount.name,
+                             p.release.name}
     local engine_params = {}
     for i, param in ipairs(params_to_check) do
         local value = params:get(param)
@@ -367,28 +408,32 @@ function enc(n, d)
         if selected_screen_param == 1 then
             selected_step = util.clamp(selected_step + d, 1, num_steps)
         elseif selected_screen_param == 2 then
-            params:set("attack" .. selected_step, util.clamp(params:get("attack" .. selected_step) + d / 100, 0.01, 1))
+            params:set(p.attack.name .. selected_step,
+                util.clamp(params:get(p.attack.name .. selected_step) + d / 100, 0.01, 1))
         elseif selected_screen_param == 3 then
-            params:set("length" .. selected_step, util.clamp(params:get("length" .. selected_step) + d / 10, -100, 100))
+            params:set(p.length.name .. selected_step,
+                util.clamp(params:get(p.length.name .. selected_step) + d / 10, -100, 100))
         elseif selected_screen_param == 4 then
-            params:set("level" .. selected_step, util.clamp(params:get("level" .. selected_step) + d / 10, 0, 1))
+            params:set(p.level.name .. selected_step,
+                util.clamp(params:get(p.level.name .. selected_step) + d / 10, 0, 1))
         elseif selected_screen_param == 5 then
-            params:set("playback_rate" .. selected_step,
-                util.clamp(params:get("playback_rate" .. selected_step) + d / 100, 0.25, 32))
+            params:set(p.playback_rate.name .. selected_step,
+                util.clamp(params:get(p.playback_rate.name .. selected_step) + d / 100, 0.25, 32))
         elseif selected_screen_param == 6 then
-            params:set("rand_freq" .. selected_step,
-                util.clamp(params:get("rand_freq" .. selected_step) + d / 10, 0, 100))
+            params:set(p.rand_freq.name .. selected_step,
+                util.clamp(params:get(p.rand_freq.name .. selected_step) + d / 10, 0, 100))
         elseif selected_screen_param == 7 then
-            params:set("rand_length_amount" .. selected_step,
-                util.clamp(params:get("rand_length_amount" .. selected_step) + d / 10, 0, 100))
+            params:set(p.rand_length_amount.name .. selected_step,
+                util.clamp(params:get(p.rand_length_amount.name .. selected_step) + d / 10, 0, 100))
         elseif selected_screen_param == 8 then
-            params:set("rand_length_unquantized" .. selected_step,
-                util.clamp(params:get("rand_length_unquantized" .. selected_step) + d / 1, 0, 1))
+            params:set(p.rand_length_unquantized.name .. selected_step,
+                util.clamp(params:get(p.rand_length_unquantized.name .. selected_step) + d / 1, 0, 1))
         elseif selected_screen_param == 9 then
-            params:set("rand_pan_amount" .. selected_step,
-                util.clamp(params:get("rand_pan_amount" .. selected_step) + d / 10, 0, 1))
+            params:set(p.rand_pan_amount.name .. selected_step,
+                util.clamp(params:get(p.rand_pan_amount.name .. selected_step) + d / 10, 0, 1))
         elseif selected_screen_param == 10 then
-            params:set("release" .. selected_step, util.clamp(params:get("release" .. selected_step) + d / 100, 0.01, 1))
+            params:set(p.release.name .. selected_step,
+                util.clamp(params:get(p.release.name .. selected_step) + d / 100, 0.01, 1))
         end
     end
     screen_dirty = true
@@ -431,55 +476,55 @@ function redraw()
     screen.move(55, 15)
     screen.text_right("atk:")
     screen.move(60, 15)
-    screen.text(params:get("attack" .. selected_step))
+    screen.text(params:get(p.attack.name .. selected_step))
 
     screen.level(selected_screen_param == 3 and 15 or 2)
     screen.move(55, 25)
     screen.text_right("len:")
     screen.move(60, 25)
-    screen.text(params:get("length" .. selected_step))
+    screen.text(params:get(p.length.name .. selected_step))
 
     screen.level(selected_screen_param == 4 and 15 or 2)
     screen.move(55, 35)
     screen.text_right("lvl:")
     screen.move(60, 35)
-    screen.text(params:get("level" .. selected_step))
+    screen.text(params:get(p.level.name .. selected_step))
 
     screen.level(selected_screen_param == 5 and 15 or 2)
     screen.move(55, 45)
     screen.text_right("rate:")
     screen.move(60, 45)
-    screen.text(params:get("playback_rate" .. selected_step))
+    screen.text(params:get(p.playback_rate.name .. selected_step))
 
     screen.level(selected_screen_param == 6 and 15 or 2)
     screen.move(55, 55)
     screen.text_right("rFreq:")
     screen.move(60, 55)
-    screen.text(params:get("rand_freq" .. selected_step))
+    screen.text(params:get(p.rand_freq.name .. selected_step))
 
     screen.level(selected_screen_param == 7 and 15 or 2)
     screen.move(105, 15)
     screen.text_right("rLen:")
     screen.move(110, 15)
-    screen.text(params:get("rand_length_amount" .. selected_step))
+    screen.text(params:get(p.rand_length_amount.name .. selected_step))
 
     screen.level(selected_screen_param == 8 and 15 or 2)
     screen.move(105, 25)
     screen.text_right("rLenQ:")
     screen.move(110, 25)
-    screen.text(params:get("rand_length_unquantized" .. selected_step))
+    screen.text(params:get(p.rand_length_unquantized.name .. selected_step))
 
     screen.level(selected_screen_param == 9 and 15 or 2)
     screen.move(105, 35)
     screen.text_right("rPan:")
     screen.move(110, 35)
-    screen.text(params:get("rand_pan_amount" .. selected_step))
+    screen.text(params:get(p.rand_pan_amount.name .. selected_step))
 
     screen.level(selected_screen_param == 10 and 15 or 2)
     screen.move(105, 45)
     screen.text_right("rel:")
     screen.move(110, 45)
-    screen.text(params:get("release" .. selected_step))
+    screen.text(params:get(p.release.name .. selected_step))
 
     screen_dirty = false
     screen.update()
