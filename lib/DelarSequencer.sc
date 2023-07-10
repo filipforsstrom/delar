@@ -32,8 +32,8 @@ DelarSequencer {
 	var <>attack;
 	var <>release;
 	var <>randFreq;
-	var <>randLengthAmount;
-	var <>randLengthUnquantized;
+	var <>randStartPosition;
+	var <>randEndPosition;
 	var <>randPanAmount;
 	var <>level;
 
@@ -109,8 +109,8 @@ DelarSequencer {
 		attack = 0.01;
 		release = 0.01;
 		randFreq = 0.5;
-		randLengthAmount = 0;
-		randLengthUnquantized = false;
+		randStartPosition = 0;
+		randEndPosition = false;
 		randPanAmount = 0;
 		level = 0.5;
 	}
@@ -149,13 +149,13 @@ DelarSequencer {
 		endSlice = slices[(activeSlices[currentStep] + 1).min(slices.size - 1)];
 
 		// random length
-		if (randLengthAmount > 0, {
-			rand = rrand((randLengthAmount * -1) * 0.001, randLengthAmount * 0.001);
+		if (randStartPosition > 0, {
+			rand = rrand((randStartPosition * -1) * 0.001, randStartPosition * 0.001);
 			startSlice = startSlice + rand;
 			startSlice.max(0).min(1);
 
-			if (randLengthUnquantized, {
-				rand = rrand((randLengthAmount * -1) * 0.001, randLengthAmount * 0.001);
+			if (randEndPosition, {
+				rand = rrand((randStartPosition * -1) * 0.001, randStartPosition * 0.001);
 			});
 			endSlice = endSlice + rand;
 			endSlice.max(0).min(1);
@@ -236,16 +236,17 @@ DelarSequencer {
 		activeSlices = [slice];
 	}
 
-	setAll { arg slice, atk, len, lvl, rate, rFreq, rLen, rLenQ, rPan, rel;
+	setAll { arg slice, atk, len, lvl, rate, rFreq, rStartPos, rEndPos, rPan, rel;
 		activeSlices = [slice.max(0).min(slices.size - 1)];
 		attack = atk;
 		length = len;
 		level = lvl;
 		playbackRate = rate;
 		randFreq = rFreq;
-		randLengthAmount = rLen;
-		randLengthUnquantized = rLenQ;
-		randPanAmount = rPan;
+		randStartPosition = rStartPos;
+		randEndPosition = rEndPos;
+		randPanAmount = (rPan * 0.01).max(0).min(1.0);
+		[randPanAmount].postln;
 		release = rel;
 	}
 
