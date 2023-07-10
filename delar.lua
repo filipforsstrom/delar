@@ -81,19 +81,12 @@ defaults = {
 }
 
 function init()
-    -- for i = 1, 128 do
-    --     steps[i] = false
-    -- end
-
     for i = 1, num_steps do
         steps[i] = {
             enabled = false,
             altered = false
         }
     end
-
-    -- steps[1].enabled = true
-    -- steps[10].enabled = true
 
     for i = 1, 8 do
         for j = 1, 16 do
@@ -549,9 +542,6 @@ function grid_redraw()
     if playing_step > 0 then
         g:led(leds[playing_step].x, leds[playing_step].y, playing_step_led_brightness)
     end
-
-    -- g:led(keys[3].x, keys[3].y, 15)
-    -- g:led(16, 1, 15)
 
     g:refresh()
 end
