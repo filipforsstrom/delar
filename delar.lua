@@ -172,6 +172,13 @@ function init_params()
         quantum = 0.002,
         wrap = false
     }
+    params:add_number("rotation", "rotation", -1, 1, 0)
+    params:set_action("rotation", function(x)
+        if x > 0 or x < 0 then
+            rotate(x)
+        end
+        params:set("rotation", 0)
+    end)
 
     params:add_control(p.attack.name, "attack", attack)
     params:add_control(p.length.name, "length", length)
@@ -238,6 +245,39 @@ function init_params()
         params:set_action(p.release.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
+    end
+end
+
+function rotate(x)
+    local params_to_rotate = {"enabled", "altered", p.attack.name, p.length.name, p.level.name, p.playback_rate.name,
+                              p.rand_freq.name, p.rand_length_amount.name, p.rand_length_unquantized.name,
+                              p.rand_pan_amount.name, p.release.name}
+
+    -- store all params in a table
+    local all_params = {}
+    for i = 1, num_steps do
+        all_params[i] = {}
+        for _, param in ipairs(params_to_rotate) do
+            all_params[i][param] = params:get(param .. i)
+        end
+    end
+
+    -- rotate the table
+    local rotate_steps = x % num_steps -- calculate the number of steps to rotate
+    if rotate_steps ~= 0 then -- only rotate if there are steps to rotate
+        if rotate_steps < 0 then -- rotate left
+            rotate_steps = rotate_steps + num_steps
+        end
+        for i = 1, rotate_steps do
+            table.insert(all_params, 1, table.remove(all_params, num_steps))
+        end
+    end
+
+    -- set all params to the new values
+    for i = 1, num_steps do
+        for _, param in ipairs(params_to_rotate) do
+            params:set(param .. i, all_params[i][param])
+        end
     end
 end
 
