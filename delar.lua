@@ -105,7 +105,7 @@ function init()
 end
 
 function init_params()
-    params:add_number("num_steps", "num steps", 1, max_num_steps, 127)
+    params:add_number("num_steps", "num steps", 1, max_num_steps, 128)
     params:set_action("num_steps", function(x)
         engine.set_num_slices(x)
     end)
@@ -433,6 +433,9 @@ function enc(n, d)
     end
 
     if pages.index == 1 then
+        if n == 2 then
+            params:set("rotation", util.clamp(params:get("rotation") + d, -1, 1))
+        end
         if n == 3 then
             params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
         end
