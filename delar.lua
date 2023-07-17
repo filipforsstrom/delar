@@ -13,7 +13,7 @@ playing_step_led_brightness = 15
 sequence = {}
 sequence_position = 1
 steps = {}
-num_steps = 128
+max_num_steps = 256
 num_synth_params = 12
 selected_step = 1
 selected_screen_param = 1
@@ -66,7 +66,7 @@ function init()
     -- Init UI
     pages = ui.Pages.new(1, 3)
 
-    for i = 1, num_steps do
+    for i = 1, max_num_steps do
         steps[i] = {
             enabled = false,
             altered = false
@@ -89,10 +89,10 @@ function init()
     init_params()
 
     params:bang()
-    params:set("enabled89", 1)
+    params:set("enabled32", 1)
     engine.setSample(sample_path .. "piano1.wav")
     is_playing = true
-    engine.set_num_slices(num_steps)
+    -- engine.set_num_slices(max_num_steps)
 
     screen_dirty = true
     screen_clock = clock.run(screen_redraw_clock)
@@ -104,6 +104,10 @@ function init()
 end
 
 function init_params()
+    params:add_number("num_steps", "num steps", 1, max_num_steps, 64)
+    params:set_action("num_steps", function(x)
+        engine.set_num_slices(x)
+    end)
     params:add_file("sample", "sample", sample_path)
     params:set_action("sample", function(x)
         engine.setSample(x)
@@ -209,7 +213,7 @@ function init_params()
     params:add_control(p.playback_rate.name, "rate", playbackRate)
     params:add_control(p.release.name, "release", release)
 
-    for i = 1, num_steps do
+    for i = 1, max_num_steps do
         params:add_group("step " .. i, num_synth_params)
         -- params:hide("step " .. i)
         params:add_number("enabled" .. i, "enabled", 0, 1, 0)
@@ -275,6 +279,7 @@ function rotate(x)
     local params_to_rotate = {"enabled", "altered", p.attack.name, p.cutoff.name, p.length.name, p.level.name,
                               p.playback_rate.name, p.rand_freq.name, p.rand_length_amount.name,
                               p.rand_length_unquantized.name, p.rand_pan_amount.name, p.release.name}
+    local num_steps = params:get("num_steps")
 
     -- store all params in a table
     local all_params = {}
@@ -411,7 +416,7 @@ function enc(n, d)
 
     if n == 3 then
         if selected_screen_param == 1 then
-            selected_step = util.clamp(selected_step + d, 1, num_steps)
+            selected_step = util.clamp(selected_step + d, 1, params:get("num_steps"))
         elseif selected_screen_param == 2 then
             params:set(p.attack.name .. selected_step,
                 util.clamp(params:get(p.attack.name .. selected_step) + d / 100, 0.01, 1))
