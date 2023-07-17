@@ -36,6 +36,8 @@ DelarSequencer {
 	var <>randEndPosition;
 	var <>randPanAmount;
 	var <>level;
+	var <>busOutput;
+	var <>cutoff;
 
 	*new { arg server, targetNode, addAction, doneLoadingCallback;
 		^super.newCopyArgs(server, targetNode, addAction, doneLoadingCallback).init
@@ -44,14 +46,6 @@ DelarSequencer {
 	init {
 		if (targetNode.isNil, { targetNode = server; });
 		if (addAction.isNil, { addAction = \addToHead });
-		/*Routine {
-			var buf;
-			buf = Buffer.read(server, path);
-			server.sync;
-			sample = buf;
-
-			if(doneLoadingCallback.notNil, { doneLoadingCallback.value });
-		}.play;*/
 
 		SynthDef.new(\SampleSliceSequencer_1shot_env_raw_mono, {
 			var buf = \buffer.ir;
@@ -80,8 +74,10 @@ DelarSequencer {
 			var env = EnvGen.ar(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction:2);
 			var phase = Phasor.ar(0, rate, \startFrame.ir, \endFrame.ir);
 			var snd = BufRd.ar(2, buf, phase);
-			snd = snd * env;
-			snd = Balance2.ar(snd[0], snd[1], rand * \randPanAmount.kr(0));
+			// snd = snd * env;
+			var filter = BLowPass.ar(snd, \cutoff.ir(20000).max(30).min(20000));
+			filter = filter * env;
+			snd = Balance2.ar(filter[0], filter[1], rand * \randPanAmount.kr(0));
 			Out.ar(\out.ir(0), snd * \level.ir(0.5));
 		}).send(server);
 
@@ -113,6 +109,7 @@ DelarSequencer {
 		randEndPosition = false;
 		randPanAmount = 0;
 		level = 0.5;
+		busOutput = 0;
 	}
 
 
@@ -179,6 +176,7 @@ DelarSequencer {
 		synthArgs = [
 			attack: attack,
 			buffer: buffer.bufnum,
+			cutoff: cutoff,
 			duration: duration,
 			endFrame: endFrame,
 			level: level,
@@ -187,6 +185,7 @@ DelarSequencer {
 			randPanAmount: randPanAmount,
 			release: release,
 			startFrame: startFrame,
+			out: busOutput,
 		];
 
 		server.bind({ synth = Synth.new(defSymbol, synthArgs, targetNode, addAction) });
@@ -236,9 +235,10 @@ DelarSequencer {
 		activeSlices = [slice];
 	}
 
-	setAll { arg slice, atk, len, lvl, rate, rFreq, rStartPos, rEndPos, rPan, rel;
+	setAll { arg slice, atk, cutoffFreq, len, lvl, rate, rFreq, rStartPos, rEndPos, rPan, rel;
 		activeSlices = [slice.max(0).min(slices.size - 1)];
 		attack = atk;
+		cutoff = cutoffFreq;
 		length = len;
 		level = lvl;
 		playbackRate = rate;
