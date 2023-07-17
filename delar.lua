@@ -103,7 +103,7 @@ function init()
 end
 
 function init_params()
-    params:add_number("num_steps", "num steps", 1, max_num_steps, 64)
+    params:add_number("num_steps", "num steps", 1, max_num_steps, 127)
     params:set_action("num_steps", function(x)
         engine.set_num_slices(x)
     end)
@@ -333,6 +333,16 @@ function key(n, z)
             play()
         end
     end
+
+    if n == 3 and z == 1 then
+        -- toggle step enabled/disabled
+        local selected_step = params:get("selected_step")
+        if params:get("enabled" .. selected_step) == 1 then
+            params:set("enabled" .. selected_step, 0)
+        else
+            params:set("enabled" .. selected_step, 1)
+        end
+    end
 end
 
 function osc_in(path, args, from)
@@ -420,6 +430,12 @@ function enc(n, d)
         selected_screen_param = util.clamp(selected_screen_param + d, 1, num_screen_params)
     end
 
+    if pages.index == 1 then
+        if n == 3 then
+            params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
+        end
+    end
+
     if n == 3 then
         if selected_screen_param == 1 then
             selected_step = util.clamp(selected_step + d, 1, params:get("num_steps"))
@@ -474,7 +490,102 @@ function redraw()
 
     pages:redraw()
 
+    -- for m = 1, 5 do
+    --     for n = 1, 5 do
+    --         screen.rect(0.5 + m * 9, 0.5 + n * 9, 6, 6) -- (x,y,width,height)
+    --         l = 2
+    --         screen.level(l)
+    --         screen.stroke()
+    --     end
+    -- end
+
     if pages.index == 1 then
+
+        local selected_step = params:get("selected_step")
+        local playing_step = playing_step
+
+        -- Limit the number of squares to a minimum of 1 and a maximum of 256
+        local num_steps = params:get("num_steps")
+
+        -- Get the total width and height of the screen (you can adjust these values)
+        local screenWidth = 128 -- Example: Change this to your actual screen width
+        local screenHeight = 64 -- Example: Change this to your actual screen height
+
+        -- Determine the size of each square on the x-axis
+        local stepSizeX = 6
+        local stepSizeY = 6
+
+        -- Calculate the number of rows and columns to form the grid
+        local numColumns = 16
+        local numRows = 8
+
+        -- Full grid
+        for row = 1, numRows do
+            for col = 1, numColumns do
+                local stepX = col * stepSizeX
+                local stepY = row * stepSizeY
+
+                screen.rect(stepX, stepY, stepSizeX, stepSizeY)
+                screen.level(1)
+                screen.stroke()
+            end
+        end
+
+        -- -- Active steps
+        -- for row = 1, numRows do
+        --     for col = 1, numColumns do
+        --         local stepX = col * stepSizeX
+        --         local stepY = row * stepSizeY
+
+        --         if (row - 1) * numColumns + col <= num_steps then
+        --             screen.rect(stepX, stepY, stepSizeX, stepSizeY)
+        --             screen.level(5)
+        --             screen.stroke()
+        --         end
+        --     end
+        -- end
+
+        -- Enabled steps
+        for row = 1, numRows do
+            for col = 1, numColumns do
+                local stepX = col * stepSizeX
+                local stepY = row * stepSizeY
+
+                if steps[(row - 1) * numColumns + col].enabled then
+                    screen.rect(stepX, stepY, stepSizeX, stepSizeY)
+                    screen.level(5)
+                    screen.stroke()
+                end
+            end
+        end
+
+        -- Playing step
+        for row = 1, numRows do
+            for col = 1, numColumns do
+                local stepX = col * stepSizeX
+                local stepY = row * stepSizeY
+
+                if (row - 1) * numColumns + col == playing_step then
+                    screen.rect(stepX + 2, stepY + 2, 2, 2)
+                    screen.level(15)
+                    screen.stroke()
+                end
+            end
+        end
+
+        -- Selected steps
+        for row = 1, numRows do
+            for col = 1, numColumns do
+                local stepX = col * stepSizeX
+                local stepY = row * stepSizeY
+
+                if (row - 1) * numColumns + col == selected_step then
+                    screen.rect(stepX, stepY, stepSizeX, stepSizeY)
+                    screen.level(15)
+                    screen.stroke()
+                end
+            end
+        end
 
     elseif pages.index == 2 then
         -- step
