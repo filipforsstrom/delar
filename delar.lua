@@ -1,5 +1,7 @@
 engine.name = 'DelarSequencer'
 tabutil = require "tabutil"
+ui = require "ui"
+local pages
 g = grid.connect()
 leds = {}
 keys_counter = {}
@@ -61,6 +63,9 @@ p = {
 }
 
 function init()
+    -- Init UI
+    pages = ui.Pages.new(1, 3)
+
     for i = 1, num_steps do
         steps[i] = {
             enabled = false,
@@ -395,9 +400,15 @@ function send_next_step(step)
 end
 
 function enc(n, d)
+    if n == 1 then
+        -- Page scroll
+        pages:set_index_delta(util.clamp(d, -1, 1), false)
+    end
+
     if n == 2 then
         selected_screen_param = util.clamp(selected_screen_param + d, 1, num_screen_params)
     end
+
     if n == 3 then
         if selected_screen_param == 1 then
             selected_step = util.clamp(selected_step + d, 1, num_steps)
@@ -448,94 +459,102 @@ function screen_redraw_clock()
 end
 
 function redraw()
-    screen.font_face(1)
     screen.clear()
 
-    -- step
-    screen.font_size(8)
-    screen.level(15)
-    screen.move(5, 5)
+    pages:redraw()
 
-    if playing_step > 0 then
-        screen.text("step: " .. playing_step)
-    else
-        screen.text("step: -")
+    if pages.index == 1 then
+
+    elseif pages.index == 2 then
+        -- step
+        screen.font_size(8)
+        screen.level(15)
+        screen.move(5, 5)
+
+        if playing_step > 0 then
+            screen.text("step: " .. playing_step)
+        else
+            screen.text("step: -")
+        end
+
+        -- params
+        screen.font_size(8)
+
+        screen.level(selected_screen_param == 1 and 15 or 2)
+        screen.move(80, 5)
+        screen.text_right("step:")
+        screen.move(85, 5)
+        screen.text(selected_step)
+
+        screen.level(selected_screen_param == 2 and 15 or 2)
+        screen.move(55, 15)
+        screen.text_right("atk:")
+        screen.move(60, 15)
+        screen.text(params:get(p.attack.name .. selected_step))
+
+        screen.level(selected_screen_param == 3 and 15 or 2)
+        screen.move(55, 25)
+        screen.text_right("len:")
+        screen.move(60, 25)
+        screen.text(params:get(p.length.name .. selected_step))
+
+        screen.level(selected_screen_param == 4 and 15 or 2)
+        screen.move(55, 35)
+        screen.text_right("lvl:")
+        screen.move(60, 35)
+        screen.text(params:get(p.level.name .. selected_step))
+
+        screen.level(selected_screen_param == 5 and 15 or 2)
+        screen.move(55, 45)
+        screen.text_right("rate:")
+        screen.move(60, 45)
+        screen.text(params:get(p.playback_rate.name .. selected_step))
+
+        screen.level(selected_screen_param == 6 and 15 or 2)
+        screen.move(55, 55)
+        screen.text_right("rFreq:")
+        screen.move(60, 55)
+        screen.text(params:get(p.rand_freq.name .. selected_step))
+
+        screen.level(selected_screen_param == 7 and 15 or 2)
+        screen.move(105, 15)
+        screen.text_right("rLen:")
+        screen.move(110, 15)
+        screen.text(params:get(p.rand_length_amount.name .. selected_step))
+
+        screen.level(selected_screen_param == 8 and 15 or 2)
+        screen.move(105, 25)
+        screen.text_right("rLenQ:")
+        screen.move(110, 25)
+        screen.text(params:get(p.rand_length_unquantized.name .. selected_step))
+
+        screen.level(selected_screen_param == 9 and 15 or 2)
+        screen.move(105, 35)
+        screen.text_right("rPan:")
+        screen.move(110, 35)
+        screen.text(params:get(p.rand_pan_amount.name .. selected_step))
+
+        screen.level(selected_screen_param == 10 and 15 or 2)
+        screen.move(105, 45)
+        screen.text_right("rel:")
+        screen.move(110, 45)
+        screen.text(params:get(p.release.name .. selected_step))
+
+        screen.level(selected_screen_param == 11 and 15 or 2)
+        screen.move(105, 55)
+        screen.text_right("rot:")
+        screen.move(110, 55)
+        screen.text(params:get("rotation"))
+
+        screen.level(selected_screen_param == 12 and 15 or 2)
+        screen.move(105, 65)
+        screen.text_right("cutoff:")
+        screen.move(110, 65)
+        screen.text(params:get(p.cutoff.name .. selected_step))
+
+    elseif pages.index == 3 then
+
     end
-
-    -- params
-    screen.font_size(8)
-
-    screen.level(selected_screen_param == 1 and 15 or 2)
-    screen.move(80, 5)
-    screen.text_right("step:")
-    screen.move(85, 5)
-    screen.text(selected_step)
-
-    screen.level(selected_screen_param == 2 and 15 or 2)
-    screen.move(55, 15)
-    screen.text_right("atk:")
-    screen.move(60, 15)
-    screen.text(params:get(p.attack.name .. selected_step))
-
-    screen.level(selected_screen_param == 3 and 15 or 2)
-    screen.move(55, 25)
-    screen.text_right("len:")
-    screen.move(60, 25)
-    screen.text(params:get(p.length.name .. selected_step))
-
-    screen.level(selected_screen_param == 4 and 15 or 2)
-    screen.move(55, 35)
-    screen.text_right("lvl:")
-    screen.move(60, 35)
-    screen.text(params:get(p.level.name .. selected_step))
-
-    screen.level(selected_screen_param == 5 and 15 or 2)
-    screen.move(55, 45)
-    screen.text_right("rate:")
-    screen.move(60, 45)
-    screen.text(params:get(p.playback_rate.name .. selected_step))
-
-    screen.level(selected_screen_param == 6 and 15 or 2)
-    screen.move(55, 55)
-    screen.text_right("rFreq:")
-    screen.move(60, 55)
-    screen.text(params:get(p.rand_freq.name .. selected_step))
-
-    screen.level(selected_screen_param == 7 and 15 or 2)
-    screen.move(105, 15)
-    screen.text_right("rLen:")
-    screen.move(110, 15)
-    screen.text(params:get(p.rand_length_amount.name .. selected_step))
-
-    screen.level(selected_screen_param == 8 and 15 or 2)
-    screen.move(105, 25)
-    screen.text_right("rLenQ:")
-    screen.move(110, 25)
-    screen.text(params:get(p.rand_length_unquantized.name .. selected_step))
-
-    screen.level(selected_screen_param == 9 and 15 or 2)
-    screen.move(105, 35)
-    screen.text_right("rPan:")
-    screen.move(110, 35)
-    screen.text(params:get(p.rand_pan_amount.name .. selected_step))
-
-    screen.level(selected_screen_param == 10 and 15 or 2)
-    screen.move(105, 45)
-    screen.text_right("rel:")
-    screen.move(110, 45)
-    screen.text(params:get(p.release.name .. selected_step))
-
-    screen.level(selected_screen_param == 11 and 15 or 2)
-    screen.move(105, 55)
-    screen.text_right("rot:")
-    screen.move(110, 55)
-    screen.text(params:get("rotation"))
-
-    screen.level(selected_screen_param == 12 and 15 or 2)
-    screen.move(105, 65)
-    screen.text_right("cutoff:")
-    screen.move(110, 65)
-    screen.text(params:get(p.cutoff.name .. selected_step))
 
     screen_dirty = false
     screen.update()
