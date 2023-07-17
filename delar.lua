@@ -15,7 +15,6 @@ sequence_position = 1
 steps = {}
 max_num_steps = 256
 num_synth_params = 12
-selected_step = 1
 selected_screen_param = 1
 num_screen_params = 12
 
@@ -107,6 +106,12 @@ function init_params()
     params:add_number("num_steps", "num steps", 1, max_num_steps, 64)
     params:set_action("num_steps", function(x)
         engine.set_num_slices(x)
+    end)
+    params:add_number("selected_step", "step", 1, max_num_steps, 1)
+    params:set_action("selected_step", function(x)
+        if x > params:get("num_steps") then
+            params:set("selected_step", params:get("num_steps"))
+        end
     end)
     params:add_file("sample", "sample", sample_path)
     params:set_action("sample", function(x)
@@ -405,6 +410,7 @@ function send_next_step(step)
 end
 
 function enc(n, d)
+    local selected_step = params:get("selected_step")
     if n == 1 then
         -- Page scroll
         pages:set_index_delta(util.clamp(d, -1, 1), false)
@@ -484,6 +490,7 @@ function redraw()
 
         -- params
         screen.font_size(8)
+        local selected_step = params:get("selected_step")
 
         screen.level(selected_screen_param == 1 and 15 or 2)
         screen.move(80, 5)
@@ -566,6 +573,8 @@ function redraw()
 end
 
 function g.key(x, y, z)
+    local selected_step = params:get("selected_step")
+
     if z == 1 then -- if a grid key is pressed...
         selected_step = (y - 1) * 16 + x
 
