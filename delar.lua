@@ -10,6 +10,7 @@ sample_path = paths.home .. "/dust/audio/delar/"
 is_playing = false
 playing_step = 0
 playing_step_led_brightness = 15
+playing_step_screen_brightness = 15
 sequence = {}
 sequence_position = 1
 steps = {}
@@ -100,6 +101,7 @@ function init()
     grid_clock = clock.run(grid_redraw_clock)
 
     playing_step_led_clock = clock.run(playing_step_led_clock)
+    playing_step_screen_clock = clock.run(playing_step_screen_clock)
 end
 
 function init_params()
@@ -375,7 +377,7 @@ function tick()
     else
         stop()
     end
-    playing_step_led_brightness = 15
+    -- playing_step_led_brightness = 15
     screen_dirty = true
     grid_dirty = true
 end
@@ -567,7 +569,7 @@ function redraw()
 
                 if (row - 1) * numColumns + col == playing_step then
                     screen.rect(stepX + 2, stepY + 2, 2, 2)
-                    screen.level(15)
+                    screen.level(playing_step_screen_brightness)
                     screen.stroke()
                 end
             end
@@ -746,11 +748,25 @@ function playing_step_led_clock()
     while true do
         clock.sleep(1 / 15)
         playing_step_led_brightness = playing_step_led_brightness + direction
-        if playing_step_led_brightness == 15 then
+        if playing_step_led_brightness >= 15 then
             direction = -1
-        elseif playing_step_led_brightness == 0 then
+        elseif playing_step_led_brightness <= 0 then
             direction = 1
         end
         grid_dirty = true
+    end
+end
+
+function playing_step_screen_clock()
+    local direction = 1 -- 1 for increasing, -1 for decreasing
+    while true do
+        clock.sleep(1 / 15)
+        playing_step_screen_brightness = playing_step_screen_brightness + direction
+        if playing_step_screen_brightness >= 15 then
+            direction = -1
+        elseif playing_step_screen_brightness <= 0 then
+            direction = 1
+        end
+        screen_dirty = true
     end
 end
