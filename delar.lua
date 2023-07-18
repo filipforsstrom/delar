@@ -114,6 +114,8 @@ function init_params()
         if x > params:get("num_steps") then
             params:set("selected_step", params:get("num_steps"))
         end
+        grid_dirty = true
+        screen_dirty = true
     end)
     params:add_file("sample", "sample", sample_path)
     params:set_action("sample", function(x)
@@ -412,12 +414,18 @@ function send_next_step(step)
                              p.rand_pan_amount.name, p.release.name}
     local engine_params = {}
     for i, param in ipairs(params_to_check) do
-        local value = params:get(param .. step)
-        if value == p[param].default then
-            value = params:get(param)
+        local step_value = params:get(param .. step)
+        local global_value = params:get(param)
+        if step_value == p[param].default then -- if the step value is set to the default value, use the global value instead
+            engine_params[i] = global_value
+        elseif global_value == p[param].default then -- if the global value is set to the default value, use the step value instead
+            engine_params[i] = step_value
+        else -- if both values are different from the default value, calculate the middle value
+            local middle_value = (global_value + step_value) / 2
+            engine_params[i] = middle_value
         end
-        engine_params[i] = value
     end
+    -- tab.print(engine_params)
     engine.set_all(step, table.unpack(engine_params))
 end
 
@@ -426,10 +434,6 @@ function enc(n, d)
     if n == 1 then
         -- Page scroll
         pages:set_index_delta(util.clamp(d, -1, 1), false)
-    end
-
-    if n == 2 then
-        selected_screen_param = util.clamp(selected_screen_param + d, 1, num_screen_params)
     end
 
     if pages.index == 1 then
@@ -441,43 +445,50 @@ function enc(n, d)
         end
     end
 
-    if n == 3 then
-        if selected_screen_param == 1 then
-            selected_step = util.clamp(selected_step + d, 1, params:get("num_steps"))
-        elseif selected_screen_param == 2 then
-            params:set(p.attack.name .. selected_step,
-                util.clamp(params:get(p.attack.name .. selected_step) + d / 100, 0.01, 1))
-        elseif selected_screen_param == 3 then
-            params:set(p.length.name .. selected_step,
-                util.clamp(params:get(p.length.name .. selected_step) + d / 10, -100, 100))
-        elseif selected_screen_param == 4 then
-            params:set(p.level.name .. selected_step,
-                util.clamp(params:get(p.level.name .. selected_step) + d / 10, 0, 1))
-        elseif selected_screen_param == 5 then
-            params:set(p.playback_rate.name .. selected_step,
-                util.clamp(params:get(p.playback_rate.name .. selected_step) + d / 100, 0.25, 32))
-        elseif selected_screen_param == 6 then
-            params:set(p.rand_freq.name .. selected_step,
-                util.clamp(params:get(p.rand_freq.name .. selected_step) + d / 10, 0, 100))
-        elseif selected_screen_param == 7 then
-            params:set(p.rand_length_amount.name .. selected_step,
-                util.clamp(params:get(p.rand_length_amount.name .. selected_step) + d / 10, 0, 100))
-        elseif selected_screen_param == 8 then
-            params:set(p.rand_length_unquantized.name .. selected_step,
-                util.clamp(params:get(p.rand_length_unquantized.name .. selected_step) + d / 1, 0, 1))
-        elseif selected_screen_param == 9 then
-            params:set(p.rand_pan_amount.name .. selected_step,
-                util.clamp(params:get(p.rand_pan_amount.name .. selected_step) + d / 10, 0, 1))
-        elseif selected_screen_param == 10 then
-            params:set(p.release.name .. selected_step,
-                util.clamp(params:get(p.release.name .. selected_step) + d / 100, 0.01, 1))
-        elseif selected_screen_param == 11 then
-            params:set("rotation", util.clamp(params:get("rotation") + d / 100, -1, 1))
-        elseif selected_screen_param == 12 then
-            params:set(p.cutoff.name .. selected_step,
-                util.clamp(params:get(p.cutoff.name .. selected_step) + d / 100, 30, 20000))
+    if pages.index == 2 then
+        if n == 2 then
+            selected_screen_param = util.clamp(selected_screen_param + d, 1, num_screen_params)
+        end
+
+        if n == 3 then
+            if selected_screen_param == 1 then
+                selected_step = util.clamp(selected_step + d, 1, params:get("num_steps"))
+            elseif selected_screen_param == 2 then
+                params:set(p.attack.name .. selected_step,
+                    util.clamp(params:get(p.attack.name .. selected_step) + d / 100, 0.01, 1))
+            elseif selected_screen_param == 3 then
+                params:set(p.length.name .. selected_step,
+                    util.clamp(params:get(p.length.name .. selected_step) + d / 10, -100, 100))
+            elseif selected_screen_param == 4 then
+                params:set(p.level.name .. selected_step,
+                    util.clamp(params:get(p.level.name .. selected_step) + d / 10, 0, 1))
+            elseif selected_screen_param == 5 then
+                params:set(p.playback_rate.name .. selected_step,
+                    util.clamp(params:get(p.playback_rate.name .. selected_step) + d / 100, 0.25, 32))
+            elseif selected_screen_param == 6 then
+                params:set(p.rand_freq.name .. selected_step,
+                    util.clamp(params:get(p.rand_freq.name .. selected_step) + d / 10, 0, 100))
+            elseif selected_screen_param == 7 then
+                params:set(p.rand_length_amount.name .. selected_step,
+                    util.clamp(params:get(p.rand_length_amount.name .. selected_step) + d / 10, 0, 100))
+            elseif selected_screen_param == 8 then
+                params:set(p.rand_length_unquantized.name .. selected_step,
+                    util.clamp(params:get(p.rand_length_unquantized.name .. selected_step) + d / 1, 0, 1))
+            elseif selected_screen_param == 9 then
+                params:set(p.rand_pan_amount.name .. selected_step,
+                    util.clamp(params:get(p.rand_pan_amount.name .. selected_step) + d / 10, 0, 1))
+            elseif selected_screen_param == 10 then
+                params:set(p.release.name .. selected_step,
+                    util.clamp(params:get(p.release.name .. selected_step) + d / 100, 0.01, 1))
+            elseif selected_screen_param == 11 then
+                params:set("rotation", util.clamp(params:get("rotation") + d / 100, -1, 1))
+            elseif selected_screen_param == 12 then
+                params:set(p.cutoff.name .. selected_step,
+                    util.clamp(params:get(p.cutoff.name .. selected_step) + d / 100, 30, 20000))
+            end
         end
     end
+
     screen_dirty = true
 end
 
@@ -559,6 +570,20 @@ function redraw()
                 if steps[(row - 1) * numColumns + col].enabled then
                     screen.rect(stepX, stepY, stepSizeX, stepSizeY)
                     screen.level(5)
+                    screen.stroke()
+                end
+            end
+        end
+
+        -- Altered steps
+        for row = 1, numRows do
+            for col = 1, numColumns do
+                local stepX = col * stepSizeX
+                local stepY = row * stepSizeY
+
+                if steps[(row - 1) * numColumns + col].altered then
+                    screen.rect(stepX + 1, stepY + 1, stepSizeX - 2, stepSizeY - 2)
+                    screen.level(15)
                     screen.stroke()
                 end
             end
