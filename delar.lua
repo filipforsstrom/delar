@@ -15,9 +15,9 @@ sequence = {}
 sequence_position = 1
 steps = {}
 max_num_steps = 256
-num_synth_params = 12
+num_synth_params = 11
 selected_screen_param = 1
-num_screen_params = 12
+num_screen_params = 11
 
 p = {
     attack = {
@@ -213,6 +213,9 @@ function init_params()
 
     params:add_control(p.attack.name, "attack", attack)
     params:add_control(p.cutoff.name, "cutoff", cutoff)
+    params:set_action(p.cutoff.name, function(x)
+        -- set cutoff in engine filter
+    end)
     params:add_control(p.length.name, "length", length)
     params:add_control(p.level.name, "level", level)
     params:add_control(p.rand_freq.name, "rand freq", rand_freq)
@@ -241,11 +244,6 @@ function init_params()
         end)
         params:add_control(p.attack.name .. i, "attack", attack)
         params:set_action(p.attack.name .. i, function(x)
-            -- print("attack" .. i .. " changed to " .. x)
-            params:set("altered" .. i, params:get("altered" .. i) ~ 1)
-        end)
-        params:add_control(p.cutoff.name .. i, "cutoff", cutoff)
-        params:set_action(p.cutoff.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
         params:add_control(p.length.name .. i, "length", length)
@@ -285,9 +283,9 @@ function init_params()
 end
 
 function rotate(x)
-    local params_to_rotate = {"enabled", "altered", p.attack.name, p.cutoff.name, p.length.name, p.level.name,
-                              p.playback_rate.name, p.rand_freq.name, p.rand_length_amount.name,
-                              p.rand_length_unquantized.name, p.rand_pan_amount.name, p.release.name}
+    local params_to_rotate = {"enabled", "altered", p.attack.name, p.length.name, p.level.name, p.playback_rate.name,
+                              p.rand_freq.name, p.rand_length_amount.name, p.rand_length_unquantized.name,
+                              p.rand_pan_amount.name, p.release.name}
     local num_steps = params:get("num_steps")
 
     -- store all params in a table
@@ -319,8 +317,8 @@ function rotate(x)
 end
 
 function params_not_default(step)
-    local params_to_check = {p.attack, p.cutoff, p.length, p.level, p.rand_freq, p.rand_length_amount,
-                             p.rand_length_unquantized, p.rand_pan_amount, p.playback_rate, p.release}
+    local params_to_check = {p.attack, p.length, p.level, p.rand_freq, p.rand_length_amount, p.rand_length_unquantized,
+                             p.rand_pan_amount, p.playback_rate, p.release}
     for _, param in ipairs(params_to_check) do
         if params:get(param.name .. step) ~= param.default then
             return true
@@ -409,9 +407,9 @@ function get_active_steps(steps)
 end
 
 function send_next_step(step)
-    local params_to_check = {p.attack.name, p.cutoff.name, p.length.name, p.level.name, p.playback_rate.name,
-                             p.rand_freq.name, p.rand_length_amount.name, p.rand_length_unquantized.name,
-                             p.rand_pan_amount.name, p.release.name}
+    local params_to_check = {p.attack.name, p.length.name, p.level.name, p.playback_rate.name, p.rand_freq.name,
+                             p.rand_length_amount.name, p.rand_length_unquantized.name, p.rand_pan_amount.name,
+                             p.release.name}
     local engine_params = {}
     for i, param in ipairs(params_to_check) do
         local step_value = params:get(param .. step)
@@ -452,7 +450,7 @@ function enc(n, d)
 
         if n == 3 then
             if selected_screen_param == 1 then
-                selected_step = util.clamp(selected_step + d, 1, params:get("num_steps"))
+                params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
             elseif selected_screen_param == 2 then
                 params:set(p.attack.name .. selected_step,
                     util.clamp(params:get(p.attack.name .. selected_step) + d / 100, 0.01, 1))
@@ -476,15 +474,12 @@ function enc(n, d)
                     util.clamp(params:get(p.rand_length_unquantized.name .. selected_step) + d / 1, 0, 1))
             elseif selected_screen_param == 9 then
                 params:set(p.rand_pan_amount.name .. selected_step,
-                    util.clamp(params:get(p.rand_pan_amount.name .. selected_step) + d / 10, 0, 1))
+                    util.clamp(params:get(p.rand_pan_amount.name .. selected_step) + d / 10, 0, 100))
             elseif selected_screen_param == 10 then
                 params:set(p.release.name .. selected_step,
                     util.clamp(params:get(p.release.name .. selected_step) + d / 100, 0.01, 1))
             elseif selected_screen_param == 11 then
                 params:set("rotation", util.clamp(params:get("rotation") + d / 100, -1, 1))
-            elseif selected_screen_param == 12 then
-                params:set(p.cutoff.name .. selected_step,
-                    util.clamp(params:get(p.cutoff.name .. selected_step) + d / 100, 30, 20000))
             end
         end
     end
@@ -698,12 +693,6 @@ function redraw()
         screen.text_right("rot:")
         screen.move(110, 55)
         screen.text(params:get("rotation"))
-
-        screen.level(selected_screen_param == 12 and 15 or 2)
-        screen.move(105, 65)
-        screen.text_right("cutoff:")
-        screen.move(110, 65)
-        screen.text(params:get(p.cutoff.name .. selected_step))
 
     elseif pages.index == 3 then
 
