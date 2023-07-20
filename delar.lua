@@ -530,11 +530,15 @@ function redraw()
         local numColumns = 16
         local numRows = 8
 
+        -- Calculate the starting position of the grid to center it on the screen
+        local startX = (screenWidth - (numColumns * stepSizeX)) / 2
+        local startY = (screenHeight - (numRows * stepSizeY)) / 2
+
         -- Full grid
         for row = 1, numRows do
             for col = 1, numColumns do
-                local stepX = col * stepSizeX
-                local stepY = row * stepSizeY
+                local stepX = startX + col * stepSizeX
+                local stepY = startY + row * stepSizeY
 
                 screen.rect(stepX, stepY, stepSizeX, stepSizeY)
                 screen.level(1)
@@ -542,25 +546,11 @@ function redraw()
             end
         end
 
-        -- -- Active steps
-        -- for row = 1, numRows do
-        --     for col = 1, numColumns do
-        --         local stepX = col * stepSizeX
-        --         local stepY = row * stepSizeY
-
-        --         if (row - 1) * numColumns + col <= num_steps then
-        --             screen.rect(stepX, stepY, stepSizeX, stepSizeY)
-        --             screen.level(5)
-        --             screen.stroke()
-        --         end
-        --     end
-        -- end
-
         -- Enabled steps
         for row = 1, numRows do
             for col = 1, numColumns do
-                local stepX = col * stepSizeX
-                local stepY = row * stepSizeY
+                local stepX = startX + col * stepSizeX
+                local stepY = startY + row * stepSizeY
 
                 if steps[(row - 1) * numColumns + col].enabled then
                     screen.rect(stepX, stepY, stepSizeX, stepSizeY)
@@ -573,8 +563,8 @@ function redraw()
         -- Altered steps
         for row = 1, numRows do
             for col = 1, numColumns do
-                local stepX = col * stepSizeX
-                local stepY = row * stepSizeY
+                local stepX = startX + col * stepSizeX
+                local stepY = startY + row * stepSizeY
 
                 if steps[(row - 1) * numColumns + col].altered then
                     screen.rect(stepX + 1, stepY + 1, stepSizeX - 2, stepSizeY - 2)
@@ -587,8 +577,8 @@ function redraw()
         -- Playing step
         for row = 1, numRows do
             for col = 1, numColumns do
-                local stepX = col * stepSizeX
-                local stepY = row * stepSizeY
+                local stepX = startX + col * stepSizeX
+                local stepY = startY + row * stepSizeY
 
                 if (row - 1) * numColumns + col == playing_step then
                     screen.rect(stepX + 2, stepY + 2, 2, 2)
@@ -601,8 +591,8 @@ function redraw()
         -- Selected steps
         for row = 1, numRows do
             for col = 1, numColumns do
-                local stepX = col * stepSizeX
-                local stepY = row * stepSizeY
+                local stepX = startX + col * stepSizeX
+                local stepY = startY + row * stepSizeY
 
                 if (row - 1) * numColumns + col == selected_step then
                     screen.rect(stepX, stepY, stepSizeX, stepSizeY)
