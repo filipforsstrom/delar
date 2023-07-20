@@ -10,6 +10,8 @@ DelarSequencer {
 	var sample;
 
 	var synth;
+	var filter;
+	var <filterParams;
 
 	// osc
 	var osc;
@@ -37,7 +39,6 @@ DelarSequencer {
 	var <>randPanAmount;
 	var <>level;
 	var <>busOutput;
-	var <>cutoff;
 
 	*new { arg server, targetNode, addAction, doneLoadingCallback;
 		^super.newCopyArgs(server, targetNode, addAction, doneLoadingCallback).init
@@ -46,6 +47,38 @@ DelarSequencer {
 	init {
 		if (targetNode.isNil, { targetNode = server; });
 		if (addAction.isNil, { addAction = \addToHead });
+
+		filterParams = Dictionary.newFrom([
+			\cutoff, 20000,
+			\resonance, 0,
+			\lfoDepth, 0.1,
+			\lfoSpeed, 1.0,
+			\duration, 0,
+			\t_gate, 0,
+			\attack, 0,
+			\release, 0.4,
+			\modEnv, 0,
+			\modLfo, 0,
+			\level, 0.5,
+			\pan, 0;
+		]);
+
+		SynthDef.new(\Filter_stereo, {
+			var sig = In.ar(\in.ir(10), 2);
+			var duration = \duration.kr;
+			var attack = \attack.kr(0.01).min(duration);
+			var release = \release.kr(0.01).min(duration - attack);
+			var sustain = (duration - (attack + release)).max(0);
+			var env = EnvGen.ar(Env.new([0, 1, 1, 0], [attack, sustain, release]), \t_gate.kr(0));
+			var lfo = SinOsc.kr(\lfoSpeed.kr(1.0));
+			var mod = ((20000 * \modEnv.kr(0)) * env) + ((20000 * \modLfo.kr(0)) * lfo);
+			var cutoff = Lag3.kr(\cutoff.kr(800)) + mod;
+			var resonance = Lag3.kr(\resonance.kr(1.0).max(0.1).min(1.0));
+			var filter = BLowPass.ar(sig, cutoff.max(30).min(20000), resonance);
+			Out.ar(\out.ir(0), filter * \level.ir(1.0));
+		}).send(server);
+
+		server.bind({ filter = Synth.new(\Filter_stereo) });
 
 		SynthDef.new(\SampleSliceSequencer_1shot_env_raw_mono, {
 			var buf = \buffer.ir;
@@ -60,7 +93,7 @@ DelarSequencer {
 			var snd = BufRd.ar(1, buf, phase);
 			snd = snd * env;
 			snd = Pan2.ar(snd, rand * \randPanAmount.kr(0));
-			Out.ar(\out.kr(0), (snd * \level.kr(0.5)).dup);
+			Out.ar(\out.kr(0), (snd * \level.kr(0.9)).dup);
 		}).send(server);
 
 		SynthDef.new(\SampleSliceSequencer_1shot_env_raw_stereo, {
@@ -78,7 +111,7 @@ DelarSequencer {
 			var filter = BLowPass.ar(snd, \cutoff.ir(20000).max(30).min(20000));
 			filter = filter * env;
 			snd = Balance2.ar(filter[0], filter[1], rand * \randPanAmount.kr(0));
-			Out.ar(\out.ir(0), snd * \level.ir(0.5));
+			Out.ar(\out.ir(0), snd * \level.ir(0.9));
 		}).send(server);
 
 		// Slice setup
@@ -109,7 +142,7 @@ DelarSequencer {
 		randEndPosition = false;
 		randPanAmount = 0;
 		level = 0.5;
-		busOutput = 0;
+		busOutput = 10;
 	}
 
 
@@ -176,7 +209,6 @@ DelarSequencer {
 		synthArgs = [
 			attack: attack,
 			buffer: buffer.bufnum,
-			cutoff: cutoff,
 			duration: duration,
 			endFrame: endFrame,
 			level: level,
@@ -189,6 +221,9 @@ DelarSequencer {
 		];
 
 		server.bind({ synth = Synth.new(defSymbol, synthArgs, targetNode, addAction) });
+		this.setFilterParam(\duration, duration);
+		this.setFilterParam(\release, 0.9);
+		this.setFilterParam(\t_gate, 1);
 		osc.sendMsg("/step", activeSlices[currentStep]);
 
 		// this.stepCallback.value(activeSlices[currentStep]);
@@ -235,10 +270,14 @@ DelarSequencer {
 		activeSlices = [slice];
 	}
 
-	setAll { arg slice, atk, cutoffFreq, len, lvl, rate, rFreq, rStartPos, rEndPos, rPan, rel;
+	setFilterParam { arg paramKey, paramValue;
+		filter.set(paramKey, paramValue);
+		filterParams[paramKey] = paramValue;
+	}
+
+	setAll { arg slice, atk, len, lvl, rate, rFreq, rStartPos, rEndPos, rPan, rel;
 		activeSlices = [slice.max(0).min(slices.size - 1)];
 		attack = atk;
-		cutoff = cutoffFreq;
 		length = len;
 		level = lvl;
 		playbackRate = rate;
@@ -249,8 +288,14 @@ DelarSequencer {
 		release = rel;
 	}
 
+	freeSample {
+		this.stop();
+		synth.free;
+	}
+
 	free {
 		this.stop();
+		filter.free;
 		synth.free;
 	}
 }
