@@ -17,7 +17,7 @@ steps = {}
 max_num_steps = 256
 num_synth_params = 11
 selected_screen_param = 1
-num_screen_params = 11
+num_screen_params = 10
 
 p = {
     attack = {
@@ -452,6 +452,37 @@ function enc(n, d)
             if selected_screen_param == 1 then
                 params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
             elseif selected_screen_param == 2 then
+                params:set(p.attack.name, util.clamp(params:get(p.attack.name) + d / 100, 0.01, 1))
+            elseif selected_screen_param == 3 then
+                params:set(p.length.name, util.clamp(params:get(p.length.name) + d / 10, -100, 100))
+            elseif selected_screen_param == 4 then
+                params:set(p.level.name, util.clamp(params:get(p.level.name) + d / 10, 0, 1))
+            elseif selected_screen_param == 5 then
+                params:set(p.playback_rate.name, util.clamp(params:get(p.playback_rate.name) + d / 100, 0.25, 32))
+            elseif selected_screen_param == 6 then
+                params:set(p.rand_freq.name, util.clamp(params:get(p.rand_freq.name) + d / 10, 0, 100))
+            elseif selected_screen_param == 7 then
+                params:set(p.rand_length_amount.name, util.clamp(params:get(p.rand_length_amount.name) + d / 10, 0, 100))
+            elseif selected_screen_param == 8 then
+                params:set(p.rand_length_unquantized.name,
+                    util.clamp(params:get(p.rand_length_unquantized.name) + d / 1, 0, 1))
+            elseif selected_screen_param == 9 then
+                params:set(p.rand_pan_amount.name, util.clamp(params:get(p.rand_pan_amount.name) + d / 10, 0, 100))
+            elseif selected_screen_param == 10 then
+                params:set(p.release.name, util.clamp(params:get(p.release.name) + d / 100, 0.01, 1))
+            end
+        end
+    end
+
+    if pages.index == 3 then
+        if n == 2 then
+            selected_screen_param = util.clamp(selected_screen_param + d, 1, num_screen_params)
+        end
+
+        if n == 3 then
+            if selected_screen_param == 1 then
+                params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
+            elseif selected_screen_param == 2 then
                 params:set(p.attack.name .. selected_step,
                     util.clamp(params:get(p.attack.name .. selected_step) + d / 100, 0.01, 1))
             elseif selected_screen_param == 3 then
@@ -478,8 +509,6 @@ function enc(n, d)
             elseif selected_screen_param == 10 then
                 params:set(p.release.name .. selected_step,
                     util.clamp(params:get(p.release.name .. selected_step) + d / 100, 0.01, 1))
-            elseif selected_screen_param == 11 then
-                params:set("rotation", util.clamp(params:get("rotation") + d / 100, -1, 1))
             end
         end
     end
@@ -615,6 +644,79 @@ function redraw()
         end
 
         -- params
+        screen.level(selected_screen_param == 1 and 15 or 2)
+        screen.move(80, 5)
+        screen.text_right("step:")
+        screen.move(85, 5)
+        screen.text("all")
+
+        screen.level(selected_screen_param == 2 and 15 or 2)
+        screen.move(55, 15)
+        screen.text_right("atk:")
+        screen.move(60, 15)
+        screen.text(params:get(p.attack.name))
+
+        screen.level(selected_screen_param == 3 and 15 or 2)
+        screen.move(55, 25)
+        screen.text_right("len:")
+        screen.move(60, 25)
+        screen.text(params:get(p.length.name))
+
+        screen.level(selected_screen_param == 4 and 15 or 2)
+        screen.move(55, 35)
+        screen.text_right("lvl:")
+        screen.move(60, 35)
+        screen.text(params:get(p.level.name))
+
+        screen.level(selected_screen_param == 5 and 15 or 2)
+        screen.move(55, 45)
+        screen.text_right("rate:")
+        screen.move(60, 45)
+        screen.text(params:get(p.playback_rate.name))
+
+        screen.level(selected_screen_param == 6 and 15 or 2)
+        screen.move(55, 55)
+        screen.text_right("rFreq:")
+        screen.move(60, 55)
+        screen.text(params:get(p.rand_freq.name))
+
+        screen.level(selected_screen_param == 7 and 15 or 2)
+        screen.move(105, 15)
+        screen.text_right("rLen:")
+        screen.move(110, 15)
+        screen.text(params:get(p.rand_length_amount.name))
+
+        screen.level(selected_screen_param == 8 and 15 or 2)
+        screen.move(105, 25)
+        screen.text_right("rLenQ:")
+        screen.move(110, 25)
+        screen.text(params:get(p.rand_length_unquantized.name))
+
+        screen.level(selected_screen_param == 9 and 15 or 2)
+        screen.move(105, 35)
+        screen.text_right("rPan:")
+        screen.move(110, 35)
+        screen.text(params:get(p.rand_pan_amount.name))
+
+        screen.level(selected_screen_param == 10 and 15 or 2)
+        screen.move(105, 45)
+        screen.text_right("rel:")
+        screen.move(110, 45)
+        screen.text(params:get(p.release.name))
+
+    elseif pages.index == 3 then
+        -- step
+        screen.font_size(8)
+        screen.level(15)
+        screen.move(5, 5)
+
+        if playing_step > 0 then
+            screen.text("step: " .. playing_step)
+        else
+            screen.text("step: -")
+        end
+
+        -- params
         screen.font_size(8)
         local selected_step = params:get("selected_step")
 
@@ -677,14 +779,6 @@ function redraw()
         screen.text_right("rel:")
         screen.move(110, 45)
         screen.text(params:get(p.release.name .. selected_step))
-
-        screen.level(selected_screen_param == 11 and 15 or 2)
-        screen.move(105, 55)
-        screen.text_right("rot:")
-        screen.move(110, 55)
-        screen.text(params:get("rotation"))
-
-    elseif pages.index == 3 then
 
     end
 
