@@ -70,6 +70,7 @@ p = {
 function init()
     -- Init UI
     pages = ui.Pages.new(1, 3)
+    -- pages:set_index_delta(1)
 
     for i = 1, max_num_steps do
         steps[i] = {
@@ -541,6 +542,11 @@ end
 
 function redraw()
     screen.clear()
+    screen.font_face(1)
+    screen.font_size(8)
+
+    local screenWidth = 128 -- Example: Change this to your actual screen width
+    local screenHeight = 64 -- Example: Change this to your actual screen height
 
     pages:redraw()
 
@@ -557,13 +563,6 @@ function redraw()
 
         local selected_step = params:get("selected_step")
         local playing_step = playing_step
-
-        -- Limit the number of squares to a minimum of 1 and a maximum of 256
-        local num_steps = params:get("num_steps")
-
-        -- Get the total width and height of the screen (you can adjust these values)
-        local screenWidth = 128 -- Example: Change this to your actual screen width
-        local screenHeight = 64 -- Example: Change this to your actual screen height
 
         -- Determine the size of each square on the x-axis
         local stepSizeX = 6
@@ -647,7 +646,6 @@ function redraw()
 
     elseif pages.index == 2 then
         -- step
-        screen.font_size(8)
         screen.level(15)
         screen.move(5, 5)
 
@@ -720,7 +718,6 @@ function redraw()
 
     elseif pages.index == 3 then
         -- step
-        screen.font_size(8)
         screen.level(15)
         screen.move(5, 5)
 
@@ -731,7 +728,6 @@ function redraw()
         end
 
         -- params
-        screen.font_size(8)
         local selected_step = params:get("selected_step")
 
         screen.level(selected_screen_param == 1 and 15 or 2)
@@ -793,7 +789,6 @@ function redraw()
         screen.text_right("rel:")
         screen.move(110, 45)
         screen.text(params:get(p.release.name .. selected_step))
-
     end
 
     screen_dirty = false
