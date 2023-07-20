@@ -703,10 +703,9 @@ function redraw()
 end
 
 function g.key(x, y, z)
-    local selected_step = params:get("selected_step")
-
     if z == 1 then -- if a grid key is pressed...
-        selected_step = (y - 1) * 16 + x
+        local key = (y - 1) * 16 + x
+        params:set("selected_step", key)
 
         keys_counter[x][y] = clock.run(long_press, x, y) -- start the long press counter for that coordinate!
     elseif z == 0 then -- otherwise, if a grid key is released...
