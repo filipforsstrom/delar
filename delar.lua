@@ -322,6 +322,14 @@ function rotate(x)
         end
     end
 
+    -- clear steps
+    for i = 1, max_num_steps do
+        steps[i] = {
+            enabled = false,
+            altered = false
+        }
+    end
+
     -- set all params to the new values
     for i = 1, num_steps do
         for _, param in ipairs(params_to_rotate) do
