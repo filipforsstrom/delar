@@ -58,6 +58,11 @@ Engine_DelarSequencer : CroneEngine {
 			kernel.setAll(slice, attack, length, level, playbackRate, randFreq, randStartPosition, randEndPosition, randPanAmount, release);
 		});
 
+		this.addCommand(\set_filter, "sf", {arg msg;
+			kernel.setFilterParam(msg[1].asSymbol, msg[2].asFloat);
+		});
+
+
 	} // alloc
 
 	free {

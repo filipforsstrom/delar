@@ -140,9 +140,9 @@ function init_params()
         min = 30,
         max = 20000,
         warp = 'lin',
-        step = 0.01,
+        step = 0.1,
         default = p.cutoff.default,
-        quantum = 0.002,
+        quantum = 0.001,
         wrap = false
     }
     length = controlspec.def {
@@ -235,9 +235,9 @@ function init_params()
         params:set("rotation", 0)
     end)
     params:add_control(p.attack.name, "attack", percentage)
-    params:add_control(p.cutoff.name, "cutoff", percentage)
+    params:add_control(p.cutoff.name, "cutoff", cutoff)
     params:set_action(p.cutoff.name, function(x)
-        -- set cutoff in engine filter
+        engine.set_filter("cutoff", x)
     end)
     params:add_control(p.length.name, "length", percentage)
     params:add_control(p.level.name, "level", percentage)

@@ -12,6 +12,9 @@ DelarSequencer {
 	var synth;
 	var filter;
 	var <filterParams;
+	var delay;
+	var chorus;
+	var <chorusParams;
 
 	// osc
 	var osc;
@@ -48,20 +51,44 @@ DelarSequencer {
 		if (targetNode.isNil, { targetNode = server; });
 		if (addAction.isNil, { addAction = \addToHead });
 
+		chorusParams = Dictionary.newFrom([
+			\time, 0.1,
+			\feedback, 0.0,
+			\mix, 0.5,
+			\level, 1.0,
+		]);
+
 		filterParams = Dictionary.newFrom([
 			\cutoff, 20000,
 			\resonance, 0,
-			\lfoDepth, 0.1,
 			\lfoSpeed, 1.0,
 			\duration, 0,
 			\t_gate, 0,
-			\attack, 0,
-			\release, 0.4,
+			\attack, 0.01,
+			\release, 0.01,
 			\modEnv, 0,
 			\modLfo, 0,
-			\level, 0.5,
-			\pan, 0;
+			\level, 1.0,
 		]);
+
+		// SynthDef.new(\Chorus_stereo, {
+		// 	var sig = In.ar(\in.ir(12), 2);
+
+		// 	var del = AllpassN.ar(sig, 0.5, \time.kr(0.05), \feedback.kr(0.0));
+		// 	sig = sig.blend(del, \mix.kr(0.0));
+		// 	Out.ar(\out.ir(14), sig * \level.ir(1.0));
+		// }).send(server);
+
+		// server.bind({ chorus = Synth.new(\Chorus_stereo) });
+
+		// SynthDef.new(\Delay_stereo, {
+		// 	var sig = In.ar(\in.ir(14), 2);
+		// 	var del = CombN.ar(sig, 5, \time.kr(1), \feedback.kr(5));
+		// 	sig = sig.blend(del, \mix.kr(0.0));
+		// 	Out.ar(\out.ir(0), sig * \level.ir(1.0));
+		// }).send(server);
+
+		// server.bind({ delay = Synth.new(\Delay_stereo) });
 
 		SynthDef.new(\Filter_stereo, {
 			var sig = In.ar(\in.ir(10), 2);
@@ -268,6 +295,11 @@ DelarSequencer {
 
 	setSlice { arg slice;
 		activeSlices = [slice];
+	}
+
+	setChorusParam { arg paramKey, paramValue;
+		chorus.set(paramKey, paramValue);
+		chorusParams[paramKey] = paramValue;
 	}
 
 	setFilterParam { arg paramKey, paramValue;
