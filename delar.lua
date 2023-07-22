@@ -217,23 +217,33 @@ function init_params()
         params:set("rotation", 0)
     end)
 
-    params:add_control(p.attack.name, "attack", attack)
-    params:add_control(p.cutoff.name, "cutoff", cutoff)
+    percentage = controlspec.def {
+        min = -100,
+        max = 100,
+        warp = 'lin',
+        step = 0.1,
+        default = 0,
+        quantum = 0.0005,
+        wrap = false
+    }
+
+    params:add_control(p.attack.name, "attack", percentage)
+    params:add_control(p.cutoff.name, "cutoff", percentage)
     params:set_action(p.cutoff.name, function(x)
         -- set cutoff in engine filter
     end)
-    params:add_control(p.length.name, "length", length)
-    params:add_control(p.level.name, "level", level)
-    params:add_control(p.rand_freq.name, "rand freq", rand_freq)
-    params:add_control(p.rand_length_amount.name, "rand length", rand_length_amount)
-    params:add_number(p.rand_length_unquantized.name, "unquantize rand length", 0, 1, p.rand_length_unquantized.default)
-    params:add_control(p.rand_pan_amount.name, "rand pan", rand_pan_amount)
-    params:add_control(p.playback_rate.name, "playback rate", playbackRate)
+    params:add_control(p.length.name, "length", percentage)
+    params:add_control(p.level.name, "level", percentage)
+    params:add_control(p.rand_freq.name, "rand freq", percentage)
+    params:add_control(p.rand_length_amount.name, "rand length", percentage)
+    params:add_control(p.rand_length_unquantized.name, "unquantize rand length", percentage)
+    params:add_control(p.rand_pan_amount.name, "rand pan", percentage)
+    params:add_control(p.playback_rate.name, "playback rate", percentage)
     params:add_option(p.playback_rate_steps.name, "rate", playback_rate_in_steps, 3)
     params:set_action(p.playback_rate_steps.name, function(x)
         params:set(p.playback_rate.name, playback_rate_in_steps[x])
     end)
-    params:add_control(p.release.name, "release", release)
+    params:add_control(p.release.name, "release", percentage)
 
     for i = 1, max_num_steps do
         params:add_group("step " .. i, num_synth_params)
@@ -435,15 +445,15 @@ function send_next_step(step)
     local engine_params = {}
     for i, param in ipairs(params_to_check) do
         local step_value = params:get(param .. step)
+        local range = params:get_range(param .. step)
         local global_value = params:get(param)
-        if step_value == p[param].default then -- if the step value is set to the default value, use the global value instead
-            engine_params[i] = global_value
-        elseif global_value == p[param].default then -- if the global value is set to the default value, use the step value instead
-            engine_params[i] = step_value
-        else -- if both values are different from the default value, calculate the middle value
-            local middle_value = (global_value + step_value) / 2
-            engine_params[i] = middle_value
-        end
+        local new_step_value = step_value + (global_value / 100) * (range[2] - range[1])
+
+        print(param .. " step value: " .. step_value)
+        print(param .. " global value: " .. global_value)
+        print(param .. " new step value: " .. new_step_value)
+
+        engine_params[i] = new_step_value
     end
     -- tab.print(engine_params)
     engine.set_all(step, table.unpack(engine_params))
