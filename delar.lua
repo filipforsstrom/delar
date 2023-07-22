@@ -15,10 +15,9 @@ sequence = {}
 sequence_position = 1
 steps = {}
 max_num_steps = 256
-num_synth_params = 12
+num_synth_params = 11
 selected_screen_param = 1
 num_screen_params = 10
-playback_rate_in_steps = {0.25, 0.5, 1, 2, 4, 8}
 
 p = {
     attack = {
@@ -39,7 +38,7 @@ p = {
     },
     playback_rate = {
         name = "playback_rate",
-        default = 1.0
+        default = 0
     },
     playback_rate_steps = {
         name = "playback_rate_steps",
@@ -164,15 +163,15 @@ function init_params()
         quantum = 0.002,
         wrap = false
     }
-    playbackRate = controlspec.def {
-        min = 0.25,
-        max = 32.0,
-        warp = 'lin',
-        step = 0.0001,
-        default = p.playback_rate.default,
-        quantum = 0.0001,
-        wrap = false
-    }
+    -- playbackRate = controlspec.def {
+    --     min = 0.25,
+    --     max = 32.0,
+    --     warp = 'lin',
+    --     step = 0.0001,
+    --     default = p.playback_rate.default,
+    --     quantum = 0.0001,
+    --     wrap = false
+    -- }
     rand_freq = controlspec.def {
         min = 0.1,
         max = 2.0,
@@ -239,10 +238,6 @@ function init_params()
     params:add_control(p.rand_length_unquantized.name, "unquantize rand length", percentage)
     params:add_control(p.rand_pan_amount.name, "rand pan", percentage)
     params:add_control(p.playback_rate.name, "playback rate", percentage)
-    params:add_option(p.playback_rate_steps.name, "rate", playback_rate_in_steps, 3)
-    params:set_action(p.playback_rate_steps.name, function(x)
-        params:set(p.playback_rate.name, playback_rate_in_steps[x])
-    end)
     params:add_control(p.release.name, "release", percentage)
 
     for i = 1, max_num_steps do
@@ -291,13 +286,9 @@ function init_params()
         params:set_action(p.rand_pan_amount.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control(p.playback_rate.name .. i, "playback rate", playbackRate)
+        params:add_number(p.playback_rate.name .. i, "playback rate", -3, 4, 0)
         params:set_action(p.playback_rate.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
-        end)
-        params:add_option(p.playback_rate_steps.name .. i, "rate", playback_rate_in_steps, 3)
-        params:set_action(p.playback_rate_steps.name .. i, function(x)
-            params:set(p.playback_rate.name .. i, playback_rate_in_steps[x])
         end)
         params:add_control(p.release.name .. i, "release", release)
         params:set_action(p.release.name .. i, function(x)
@@ -447,11 +438,12 @@ function send_next_step(step)
         local step_value = params:get(param .. step)
         local range = params:get_range(param .. step)
         local global_value = params:get(param)
-        local new_step_value = step_value + (global_value / 100) * (range[2] - range[1])
+        local new_step_value = step_value + (global_value / 200) * (range[2] - range[1])
+        local new_step_value = util.clamp(new_step_value, range[1], range[2])
 
-        print(param .. " step value: " .. step_value)
-        print(param .. " global value: " .. global_value)
-        print(param .. " new step value: " .. new_step_value)
+        -- print(param .. " step value: " .. step_value)
+        -- print(param .. " global value: " .. global_value)
+        -- print(param .. " new step value: " .. new_step_value)
 
         engine_params[i] = new_step_value
     end
@@ -484,25 +476,25 @@ function enc(n, d)
             if selected_screen_param == 1 then
                 params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
             elseif selected_screen_param == 2 then
-                params:set(p.attack.name, util.clamp(params:get(p.attack.name) + d / 100, 0.01, 1))
+                params:set(p.attack.name, util.clamp(params:get(p.attack.name) + d / 10, -100, 100))
             elseif selected_screen_param == 3 then
                 params:set(p.length.name, util.clamp(params:get(p.length.name) + d / 10, -100, 100))
             elseif selected_screen_param == 4 then
-                params:set(p.level.name, util.clamp(params:get(p.level.name) + d / 10, 0, 1))
+                params:set(p.level.name, util.clamp(params:get(p.level.name) + d / 10, -100, 100))
             elseif selected_screen_param == 5 then
-                params:set(p.playback_rate_steps.name,
-                    util.clamp(params:get(p.playback_rate_steps.name) + d, 1, #playback_rate_in_steps))
+                params:set(p.playback_rate.name, util.clamp(params:get(p.playback_rate.name) + d / 10, -100, 100))
             elseif selected_screen_param == 6 then
-                params:set(p.rand_freq.name, util.clamp(params:get(p.rand_freq.name) + d / 10, 0, 100))
+                params:set(p.rand_freq.name, util.clamp(params:get(p.rand_freq.name) + d / 10, -100, 100))
             elseif selected_screen_param == 7 then
-                params:set(p.rand_length_amount.name, util.clamp(params:get(p.rand_length_amount.name) + d / 10, 0, 100))
+                params:set(p.rand_length_amount.name,
+                    util.clamp(params:get(p.rand_length_amount.name) + d / 10, -100, 100))
             elseif selected_screen_param == 8 then
                 params:set(p.rand_length_unquantized.name,
-                    util.clamp(params:get(p.rand_length_unquantized.name) + d / 1, 0, 1))
+                    util.clamp(params:get(p.rand_length_unquantized.name) + d / 10, -100, 100))
             elseif selected_screen_param == 9 then
-                params:set(p.rand_pan_amount.name, util.clamp(params:get(p.rand_pan_amount.name) + d / 10, 0, 100))
+                params:set(p.rand_pan_amount.name, util.clamp(params:get(p.rand_pan_amount.name) + d / 10, -100, 100))
             elseif selected_screen_param == 10 then
-                params:set(p.release.name, util.clamp(params:get(p.release.name) + d / 100, 0.01, 1))
+                params:set(p.release.name, util.clamp(params:get(p.release.name) + d / 10, -100, 100))
             end
         end
     end
@@ -525,8 +517,8 @@ function enc(n, d)
                 params:set(p.level.name .. selected_step,
                     util.clamp(params:get(p.level.name .. selected_step) + d / 10, 0, 1))
             elseif selected_screen_param == 5 then
-                params:set(p.playback_rate_steps.name .. selected_step, util.clamp(
-                    params:get(p.playback_rate_steps.name .. selected_step) + d, 1, #playback_rate_in_steps))
+                params:set(p.playback_rate.name .. selected_step,
+                    util.clamp(params:get(p.playback_rate.name .. selected_step) + d, -2, 3))
             elseif selected_screen_param == 6 then
                 params:set(p.rand_freq.name .. selected_step,
                     util.clamp(params:get(p.rand_freq.name .. selected_step) + d / 10, 0, 100))
