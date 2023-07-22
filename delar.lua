@@ -190,6 +190,15 @@ function init_params()
         quantum = 0.002,
         wrap = false
     }
+    rand_length_unquantized = controlspec.def {
+        min = 0.0,
+        max = 1.0,
+        warp = 'lin',
+        step = 0.01,
+        default = p.rand_length_unquantized.default,
+        quantum = 0.002,
+        wrap = false
+    }
     rand_pan_amount = controlspec.def {
         min = 0.0,
         max = 100.0,
@@ -208,14 +217,6 @@ function init_params()
         quantum = 0.002,
         wrap = false
     }
-    params:add_number("rotation", "rotation", -1, 1, 0)
-    params:set_action("rotation", function(x)
-        if x > 0 or x < 0 then
-            rotate(x)
-        end
-        params:set("rotation", 0)
-    end)
-
     percentage = controlspec.def {
         min = -100,
         max = 100,
@@ -226,6 +227,13 @@ function init_params()
         wrap = false
     }
 
+    params:add_number("rotation", "rotation", -1, 1, 0)
+    params:set_action("rotation", function(x)
+        if x > 0 or x < 0 then
+            rotate(x)
+        end
+        params:set("rotation", 0)
+    end)
     params:add_control(p.attack.name, "attack", percentage)
     params:add_control(p.cutoff.name, "cutoff", percentage)
     params:set_action(p.cutoff.name, function(x)
@@ -277,9 +285,8 @@ function init_params()
         params:set_action(p.rand_length_amount.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_number(p.rand_length_unquantized.name .. i, "unquantize rand length", 0, 1,
-            p.rand_length_unquantized.default)
-        params:set_action(p.rand_length_amount.name .. i, function(x)
+        params:add_control(p.rand_length_unquantized.name .. i, "unquantize rand length", rand_length_unquantized)
+        params:set_action(p.rand_length_unquantized.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
         params:add_control(p.rand_pan_amount.name .. i, "rand pan", rand_pan_amount)
@@ -437,15 +444,22 @@ function send_next_step(step)
     for i, param in ipairs(params_to_check) do
         local step_value = params:get(param .. step)
         local range = params:get_range(param .. step)
-        local global_value = params:get(param)
-        local new_step_value = step_value + (global_value / 200) * (range[2] - range[1])
-        local new_step_value = util.clamp(new_step_value, range[1], range[2])
+        local offset = params:get(param)
+        local offset_step_value = step_value + (offset / 200) * (range[2] - range[1])
+        if param == p.rand_length_unquantized.name then
+            if math.random() < offset_step_value then
+                offset_step_value = 1
+            else
+                offset_step_value = 0
+            end
+        end
+        local clamped_step_value = util.clamp(offset_step_value, range[1], range[2])
 
-        -- print(param .. " step value: " .. step_value)
-        -- print(param .. " global value: " .. global_value)
-        -- print(param .. " new step value: " .. new_step_value)
+        print(param .. " step value: " .. step_value)
+        print(param .. " global value: " .. offset)
+        print(param .. " new step value: " .. clamped_step_value)
 
-        engine_params[i] = new_step_value
+        engine_params[i] = clamped_step_value
     end
     -- tab.print(engine_params)
     engine.set_all(step, table.unpack(engine_params))
@@ -527,7 +541,7 @@ function enc(n, d)
                     util.clamp(params:get(p.rand_length_amount.name .. selected_step) + d / 10, 0, 100))
             elseif selected_screen_param == 8 then
                 params:set(p.rand_length_unquantized.name .. selected_step,
-                    util.clamp(params:get(p.rand_length_unquantized.name .. selected_step) + d / 1, 0, 1))
+                    util.clamp(params:get(p.rand_length_unquantized.name .. selected_step) + d / 100, 0, 1))
             elseif selected_screen_param == 9 then
                 params:set(p.rand_pan_amount.name .. selected_step,
                     util.clamp(params:get(p.rand_pan_amount.name .. selected_step) + d / 10, 0, 100))
