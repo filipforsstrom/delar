@@ -18,6 +18,7 @@ max_num_steps = 256
 num_synth_params = 12
 selected_screen_param = 1
 num_screen_params = 11
+rotations = {}
 
 p_filter = {
     cutoff = {
@@ -136,6 +137,8 @@ function init()
 
     grid_dirty = true
     grid_clock = clock.run(grid_redraw_clock)
+
+    rotation_clock = clock.run(rotation_clock)
 
     playing_step_led_clock = clock.run(playing_step_led_clock)
     playing_step_screen_clock = clock.run(playing_step_screen_clock)
@@ -377,7 +380,7 @@ function init_params()
     params:add_number("rotation", "rotation", -1, 1, 0)
     params:set_action("rotation", function(x)
         if x > 0 or x < 0 then
-            rotate(x)
+            table.insert(rotations, x)
         end
         params:set("rotation", 0)
     end)
@@ -609,11 +612,11 @@ function send_next_step(step)
 
         local clamped_step_value = util.clamp(offset_step_value, range[1], range[2])
 
-        print(param .. " step: " .. step_value)
-        print(param .. " range: " .. range[1] .. " - " .. range[2])
-        print(param .. " offset: " .. offset)
-        print(param .. " offset step: " .. offset_step_value)
-        print(param .. " clamped step: " .. clamped_step_value)
+        -- print(param .. " step: " .. step_value)
+        -- print(param .. " range: " .. range[1] .. " - " .. range[2])
+        -- print(param .. " offset: " .. offset)
+        -- print(param .. " offset step: " .. offset_step_value)
+        -- print(param .. " clamped step: " .. clamped_step_value)
 
         engine_params[i] = clamped_step_value
     end
@@ -1077,5 +1080,15 @@ function playing_step_screen_clock()
             direction = 1
         end
         screen_dirty = true
+    end
+end
+
+function rotation_clock()
+    while true do
+        clock.sync(1 / 10)
+        if #rotations > 0 then
+            rotate(rotations[1])
+            table.remove(rotations, 1)
+        end
     end
 end
