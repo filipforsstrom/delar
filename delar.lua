@@ -15,9 +15,9 @@ sequence = {}
 sequence_position = 1
 steps = {}
 max_num_steps = 256
-num_synth_params = 11
+num_synth_params = 12
 selected_screen_param = 1
-num_screen_params = 10
+num_screen_params = 11
 
 p = {
     attack = {
@@ -35,6 +35,10 @@ p = {
     level = {
         name = "level",
         default = 0.5
+    },
+    loop = {
+        name = "loop",
+        default = 0
     },
     playback_rate = {
         name = "playback_rate",
@@ -163,6 +167,15 @@ function init_params()
         quantum = 0.002,
         wrap = false
     }
+    loop = controlspec.def {
+        min = 0.0,
+        max = 1.0,
+        warp = 'lin',
+        step = 0.01,
+        default = p.loop.default,
+        quantum = 0.002,
+        wrap = false
+    }
     -- playbackRate = controlspec.def {
     --     min = 0.25,
     --     max = 32.0,
@@ -241,6 +254,7 @@ function init_params()
     end)
     params:add_control(p.length.name, "length", percentage)
     params:add_control(p.level.name, "level", percentage)
+    params:add_control(p.loop.name, "loop", percentage)
     params:add_control(p.rand_freq.name, "rand freq", percentage)
     params:add_control(p.rand_length_amount.name, "rand length", percentage)
     params:add_control(p.rand_length_unquantized.name, "unquantize rand length", percentage)
@@ -277,6 +291,10 @@ function init_params()
         params:set_action(p.level.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
+        params:add_control(p.loop.name .. i, "loop", loop)
+        params:set_action(p.loop.name .. i, function(x)
+            params:set("altered" .. i, params:get("altered" .. i) ~ 1)
+        end)
         params:add_control(p.rand_freq.name .. i, "rand freq", rand_freq)
         params:set_action(p.rand_freq.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
@@ -305,9 +323,9 @@ function init_params()
 end
 
 function rotate(x)
-    local params_to_rotate = {"enabled", "altered", p.attack.name, p.length.name, p.level.name, p.playback_rate.name,
-                              p.rand_freq.name, p.rand_length_amount.name, p.rand_length_unquantized.name,
-                              p.rand_pan_amount.name, p.release.name}
+    local params_to_rotate = {"enabled", "altered", p.attack.name, p.length.name, p.level.name, p.loop.name,
+                              p.playback_rate.name, p.rand_freq.name, p.rand_length_amount.name,
+                              p.rand_length_unquantized.name, p.rand_pan_amount.name, p.release.name}
     local num_steps = params:get("num_steps")
 
     -- store all params in a table
@@ -347,8 +365,8 @@ function rotate(x)
 end
 
 function params_not_default(step)
-    local params_to_check = {p.attack, p.length, p.level, p.rand_freq, p.rand_length_amount, p.rand_length_unquantized,
-                             p.rand_pan_amount, p.playback_rate, p.release}
+    local params_to_check = {p.attack, p.length, p.level, p.loop, p.rand_freq, p.rand_length_amount,
+                             p.rand_length_unquantized, p.rand_pan_amount, p.playback_rate, p.release}
     for _, param in ipairs(params_to_check) do
         if params:get(param.name .. step) ~= param.default then
             return true
@@ -437,27 +455,39 @@ function get_active_steps(steps)
 end
 
 function send_next_step(step)
-    local params_to_check = {p.attack.name, p.length.name, p.level.name, p.playback_rate.name, p.rand_freq.name,
-                             p.rand_length_amount.name, p.rand_length_unquantized.name, p.rand_pan_amount.name,
-                             p.release.name}
+    local params_to_check = {p.attack.name, p.loop.name, p.length.name, p.level.name, p.playback_rate.name,
+                             p.rand_freq.name, p.rand_length_amount.name, p.rand_length_unquantized.name,
+                             p.rand_pan_amount.name, p.release.name}
     local engine_params = {}
     for i, param in ipairs(params_to_check) do
         local step_value = params:get(param .. step)
         local range = params:get_range(param .. step)
         local offset = params:get(param)
-        local offset_step_value = step_value + (offset / 200) * (range[2] - range[1])
+        local offset_step_value = step_value + (offset / 100) * (range[2] - range[1])
         if param == p.rand_length_unquantized.name then
-            if math.random() < offset_step_value then
+            if offset_step_value == 0 then
+                offset_step_value = 0
+            elseif offset_step_value == 1 then
                 offset_step_value = 1
             else
+                offset_step_value = math.random() < offset_step_value and 1 or 0
+            end
+        elseif param == p.loop.name then
+            if offset_step_value == 0 then
                 offset_step_value = 0
+            elseif offset_step_value == 1 then
+                offset_step_value = 1
+            else
+                offset_step_value = math.random() < offset_step_value and 1 or 0
             end
         end
         local clamped_step_value = util.clamp(offset_step_value, range[1], range[2])
 
-        print(param .. " step value: " .. step_value)
-        print(param .. " global value: " .. offset)
-        print(param .. " new step value: " .. clamped_step_value)
+        print(param .. " step: " .. step_value)
+        print(param .. " range: " .. range[1] .. " - " .. range[2])
+        print(param .. " offset: " .. offset)
+        print(param .. " offset step: " .. offset_step_value)
+        print(param .. " clamped step: " .. clamped_step_value)
 
         engine_params[i] = clamped_step_value
     end
@@ -509,6 +539,8 @@ function enc(n, d)
                 params:set(p.rand_pan_amount.name, util.clamp(params:get(p.rand_pan_amount.name) + d / 10, -100, 100))
             elseif selected_screen_param == 10 then
                 params:set(p.release.name, util.clamp(params:get(p.release.name) + d / 10, -100, 100))
+            elseif selected_screen_param == 11 then
+                params:set(p.loop.name, util.clamp(params:get(p.loop.name) + d / 10, -100, 100))
             end
         end
     end
@@ -548,6 +580,9 @@ function enc(n, d)
             elseif selected_screen_param == 10 then
                 params:set(p.release.name .. selected_step,
                     util.clamp(params:get(p.release.name .. selected_step) + d / 100, 0.01, 1))
+            elseif selected_screen_param == 11 then
+                params:set(p.loop.name .. selected_step,
+                    util.clamp(params:get(p.loop.name .. selected_step) + d / 100, 0, 1))
             end
         end
     end
@@ -740,6 +775,12 @@ function redraw()
         screen.move(110, 45)
         screen.text(params:get(p.release.name))
 
+        screen.level(selected_screen_param == 11 and 15 or 2)
+        screen.move(105, 55)
+        screen.text_right("loop:")
+        screen.move(110, 55)
+        screen.text(params:get(p.loop.name))
+
     elseif pages.index == 3 then
         -- step
         screen.level(15)
@@ -813,6 +854,12 @@ function redraw()
         screen.text_right("rel:")
         screen.move(110, 45)
         screen.text(params:get(p.release.name .. selected_step))
+
+        screen.level(selected_screen_param == 11 and 15 or 2)
+        screen.move(105, 55)
+        screen.text_right("loop:")
+        screen.move(110, 55)
+        screen.text(params:get(p.loop.name .. selected_step))
     end
 
     screen_dirty = false

@@ -42,6 +42,7 @@ DelarSequencer {
 	var <>randPanAmount;
 	var <>level;
 	var <>busOutput;
+	var <>fixedDuration;
 
 	*new { arg server, targetNode, addAction, doneLoadingCallback;
 		^super.newCopyArgs(server, targetNode, addAction, doneLoadingCallback).init
@@ -71,24 +72,24 @@ DelarSequencer {
 			\level, 1.0,
 		]);
 
-		// SynthDef.new(\Chorus_stereo, {
-		// 	var sig = In.ar(\in.ir(12), 2);
+		/*SynthDef.new(\Chorus_stereo, {
+			var sig = In.ar(\in.ir(12), 2);
 
-		// 	var del = AllpassN.ar(sig, 0.5, \time.kr(0.05), \feedback.kr(0.0));
-		// 	sig = sig.blend(del, \mix.kr(0.0));
-		// 	Out.ar(\out.ir(14), sig * \level.ir(1.0));
-		// }).send(server);
+			var del = AllpassN.ar(sig, 0.5, \time.kr(0.05), \feedback.kr(0.0));
+			sig = sig.blend(del, \mix.kr(0.0));
+			Out.ar(\out.ir(14), sig * \level.ir(1.0));
+		}).send(server);
 
-		// server.bind({ chorus = Synth.new(\Chorus_stereo) });
+		server.bind({ chorus = Synth.new(\Chorus_stereo) });
 
-		// SynthDef.new(\Delay_stereo, {
-		// 	var sig = In.ar(\in.ir(14), 2);
-		// 	var del = CombN.ar(sig, 5, \time.kr(1), \feedback.kr(5));
-		// 	sig = sig.blend(del, \mix.kr(0.0));
-		// 	Out.ar(\out.ir(0), sig * \level.ir(1.0));
-		// }).send(server);
+		SynthDef.new(\Delay_stereo, {
+			var sig = In.ar(\in.ir(14), 2);
+			var del = CombN.ar(sig, 5, \time.kr(1), \feedback.kr(5));
+			sig = sig.blend(del, \mix.kr(0.0));
+			Out.ar(\out.ir(0), sig * \level.ir(1.0));
+		}).send(server);
 
-		// server.bind({ delay = Synth.new(\Delay_stereo) });
+		server.bind({ delay = Synth.new(\Delay_stereo) });*/
 
 		SynthDef.new(\Filter_stereo, {
 			var sig = In.ar(\in.ir(10), 2);
@@ -120,7 +121,7 @@ DelarSequencer {
 			var snd = BufRd.ar(1, buf, phase);
 			snd = snd * env;
 			snd = Pan2.ar(snd, rand * \randPanAmount.kr(0));
-			Out.ar(\out.kr(0), (snd * \level.kr(0.9)).dup);
+			Out.ar(\out.kr(10), (snd * \level.kr(0.9)).dup);
 		}).send(server);
 
 		SynthDef.new(\SampleSliceSequencer_1shot_env_raw_stereo, {
@@ -138,7 +139,7 @@ DelarSequencer {
 			var filter = BLowPass.ar(snd, \cutoff.ir(20000).max(30).min(20000));
 			filter = filter * env;
 			snd = Balance2.ar(filter[0], filter[1], rand * \randPanAmount.kr(0));
-			Out.ar(\out.ir(0), snd * \level.ir(0.9));
+			Out.ar(\out.ir(10), snd * \level.ir(0.9));
 		}).send(server);
 
 		// Slice setup
@@ -170,6 +171,7 @@ DelarSequencer {
 		randPanAmount = 0;
 		level = 0.5;
 		busOutput = 10;
+		fixedDuration = false;
 	}
 
 
@@ -230,7 +232,12 @@ DelarSequencer {
 		startFrame = (endFrame * startSlice).max(0);
 		endFrame = (endFrame * endSlice).max(startFrame + shortestFrameDuration).min(buffer.numFrames);
 		duration = abs((endFrame - startFrame) / (server.sampleRate * playbackRate));
-		[startFrame, endFrame, duration].postln;
+		if (fixedDuration, {
+			duration = duration * playbackRate;
+		});
+
+		["start", "end", "playback rate", "duration"].postln;
+		[startFrame, endFrame, playbackRate, duration].postln;
 		["step:" + currentStep, "slice:" + activeSlices[currentStep]].postln;
 
 		synthArgs = [
@@ -307,9 +314,10 @@ DelarSequencer {
 		filterParams[paramKey] = paramValue;
 	}
 
-	setAll { arg slice, atk, len, lvl, rate, rFreq, rStartPos, rEndPos, rPan, rel;
+	setAll { arg slice, atk, fDur, len, lvl, rate, rFreq, rStartPos, rEndPos, rPan, rel;
 		activeSlices = [slice.max(0).min(slices.size - 1)];
 		attack = atk;
+		fixedDuration = fDur;
 		length = len;
 		level = lvl;
 		playbackRate = rate;

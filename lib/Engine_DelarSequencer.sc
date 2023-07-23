@@ -31,17 +31,24 @@ Engine_DelarSequencer : CroneEngine {
 			kernel.setSlice(slice);
 		});
 
-		this.addCommand(\set_all, "ifffiffiff", { arg msg;
+		this.addCommand(\set_all, "ififfiffiff", { arg msg;
 			var slice = msg[1] - 1;
 			var attack = msg[2];
-			var length = msg[3];
-			var level = msg[4];
-			var playbackRate = msg[5];
-			var randFreq = msg[6];
-			var randStartPosition = msg[7];
-			var randEndPosition = msg[8];
-			var randPanAmount = msg[9];
-			var release = msg[10];
+			var fixedDuration = msg[3];
+			var length = msg[4];
+			var level = msg[5];
+			var playbackRate = msg[6];
+			var randFreq = msg[7];
+			var randStartPosition = msg[8];
+			var randEndPosition = msg[9];
+			var randPanAmount = msg[10];
+			var release = msg[11];
+
+			if (fixedDuration == 0, {
+				fixedDuration = false;
+			} , {
+				fixedDuration = true;
+			});
 
             if (randEndPosition == 0, {
                 randEndPosition = false;
@@ -55,7 +62,7 @@ Engine_DelarSequencer : CroneEngine {
 				playbackRate = pow(2, playbackRate);
 			});
             
-			kernel.setAll(slice, attack, length, level, playbackRate, randFreq, randStartPosition, randEndPosition, randPanAmount, release);
+			kernel.setAll(slice, attack, fixedDuration, length, level, playbackRate, randFreq, randStartPosition, randEndPosition, randPanAmount, release);
 		});
 
 		this.addCommand(\set_filter, "sf", {arg msg;
