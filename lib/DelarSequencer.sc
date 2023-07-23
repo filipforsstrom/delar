@@ -103,7 +103,7 @@ DelarSequencer {
 			var cutoff = Lag3.kr(\cutoff.kr(800)) + mod;
 			var resonance = Lag3.kr(\resonance.kr(1.0).max(0.1).min(1.0));
 			var filter = BLowPass.ar(sig, cutoff.max(30).min(20000), resonance);
-			Out.ar(\out.ir(0), filter * \level.ir(1.0));
+			Out.ar(\out.ir(0), filter * \level.kr(1.0));
 		}).send(server);
 
 		server.bind({ filter = Synth.new(\Filter_stereo) });

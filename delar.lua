@@ -19,14 +19,45 @@ num_synth_params = 12
 selected_screen_param = 1
 num_screen_params = 11
 
-p = {
+p_filter = {
+    cutoff = {
+        name = "filter_cutoff",
+        default = 20000
+    },
+    resonance = {
+        name = "filter_resonance",
+        default = 1
+    },
+    lfo_speed = {
+        name = "filter_lfo_speed",
+        default = 1.0
+    },
+    attack = {
+        name = "filter_attack",
+        default = 0.01
+    },
+    release = {
+        name = "filter_release",
+        default = 0.01
+    },
+    mod_env = {
+        name = "filter_mod_env",
+        default = 0
+    },
+    mod_lfo = {
+        name = "filter_mod_lfo",
+        default = 0
+    },
+    level = {
+        name = "filter_level",
+        default = 1.0
+    }
+}
+
+p_sampler = {
     attack = {
         name = "attack",
         default = 0.01
-    },
-    cutoff = {
-        name = "cutoff",
-        default = 20000
     },
     length = {
         name = "length",
@@ -43,10 +74,6 @@ p = {
     playback_rate = {
         name = "playback_rate",
         default = 0
-    },
-    playback_rate_steps = {
-        name = "playback_rate_steps",
-        default = 3
     },
     rand_freq = {
         name = "rand_freq",
@@ -95,6 +122,7 @@ function init()
         keys_counter[x] = {} -- create a x state counter.
     end
 
+    init_filter_params()
     init_params()
 
     params:bang()
@@ -113,7 +141,122 @@ function init()
     playing_step_screen_clock = clock.run(playing_step_screen_clock)
 end
 
+function init_filter_params()
+    cutoff = controlspec.def {
+        min = 30,
+        max = 20000,
+        warp = 'lin',
+        step = 0.1,
+        default = p_filter.cutoff.default,
+        quantum = 0.001,
+        wrap = false
+    }
+    resonance = controlspec.def {
+        min = 0,
+        max = 1,
+        warp = 'lin',
+        step = 0.01,
+        default = p_filter.resonance.default,
+        quantum = 0.001,
+        wrap = false
+    }
+    lfo_speed = controlspec.def {
+        min = 0.1,
+        max = 20,
+        warp = 'lin',
+        step = 0.01,
+        default = p_filter.lfo_speed.default,
+        quantum = 0.001,
+        wrap = false
+    }
+    attack = controlspec.def {
+        min = 0.01,
+        max = 1.0,
+        warp = 'lin',
+        step = 0.01,
+        default = p_filter.attack.default,
+        quantum = 0.001,
+        wrap = false
+    }
+    release = controlspec.def {
+        min = 0.01,
+        max = 1.0,
+        warp = 'lin',
+        step = 0.01,
+        default = p_filter.release.default,
+        quantum = 0.001,
+        wrap = false
+    }
+    mod_env = controlspec.def {
+        min = 0.0,
+        max = 1.0,
+        warp = 'lin',
+        step = 0.01,
+        default = p_filter.mod_env.default,
+        quantum = 0.001,
+        wrap = false
+    }
+    mod_lfo = controlspec.def {
+        min = 0.0,
+        max = 1.0,
+        warp = 'lin',
+        step = 0.01,
+        default = p_filter.mod_lfo.default,
+        quantum = 0.001,
+        wrap = false
+    }
+    level = controlspec.def {
+        min = 0.0,
+        max = 1.0,
+        warp = 'lin',
+        step = 0.01,
+        default = p_filter.level.default,
+        quantum = 0.001,
+        wrap = false
+    }
+
+    local length = 0
+    for _, _ in pairs(p_filter) do
+        length = length + 1
+    end
+
+    params:add_group("filter", length)
+    params:add_control(p_filter.cutoff.name, "cutoff", cutoff)
+    params:set_action(p_filter.cutoff.name, function(x)
+        engine.set_filter("cutoff", x)
+    end)
+    params:add_control(p_filter.resonance.name, "resonance", resonance)
+    params:set_action(p_filter.resonance.name, function(x)
+        engine.set_filter("resonance", x)
+    end)
+    params:add_control(p_filter.lfo_speed.name, "lfo speed", lfo_speed)
+    params:set_action(p_filter.lfo_speed.name, function(x)
+        engine.set_filter("lfoSpeed", x)
+    end)
+    params:add_control(p_filter.attack.name, "attack", attack)
+    params:set_action(p_filter.attack.name, function(x)
+        engine.set_filter("attack", x)
+    end)
+    params:add_control(p_filter.release.name, "release", release)
+    params:set_action(p_filter.release.name, function(x)
+        engine.set_filter("release", x)
+    end)
+    params:add_control(p_filter.mod_env.name, "mod env", mod_env)
+    params:set_action(p_filter.mod_env.name, function(x)
+        engine.set_filter("modEnv", x)
+    end)
+    params:add_control(p_filter.mod_lfo.name, "mod lfo", mod_lfo)
+    params:set_action(p_filter.mod_lfo.name, function(x)
+        engine.set_filter("modLfo", x)
+    end)
+    params:add_control(p_filter.level.name, "level", level)
+    params:set_action(p_filter.level.name, function(x)
+        engine.set_filter("level", x)
+    end)
+end
+
 function init_params()
+
     params:add_number("num_steps", "num steps", 1, max_num_steps, 128)
     params:set_action("num_steps", function(x)
         engine.set_num_slices(x)
@@ -136,25 +279,16 @@ function init_params()
         max = 1.0, -- the maximum value
         warp = 'lin', -- a shaping option for the raw value
         step = 0.01, -- output value quantization
-        default = p.attack.default, -- default value
+        default = p_sampler.attack.default, -- default value
         quantum = 0.002, -- each delta will change raw value by this much
         wrap = false -- wrap around on overflow (true) or clamp (false)
-    }
-    cutoff = controlspec.def {
-        min = 30,
-        max = 20000,
-        warp = 'lin',
-        step = 0.1,
-        default = p.cutoff.default,
-        quantum = 0.001,
-        wrap = false
     }
     length = controlspec.def {
         min = -100.0,
         max = 100.0,
         warp = 'lin',
         step = 0.01,
-        default = p.length.default,
+        default = p_sampler.length.default,
         quantum = 0.002,
         wrap = false
     }
@@ -163,7 +297,7 @@ function init_params()
         max = 1.0,
         warp = 'lin',
         step = 0.01,
-        default = p.level.default,
+        default = p_sampler.level.default,
         quantum = 0.002,
         wrap = false
     }
@@ -172,7 +306,7 @@ function init_params()
         max = 1.0,
         warp = 'lin',
         step = 0.01,
-        default = p.loop.default,
+        default = p_sampler.loop.default,
         quantum = 0.002,
         wrap = false
     }
@@ -190,7 +324,7 @@ function init_params()
         max = 2.0,
         warp = 'lin',
         step = 0.01,
-        default = p.rand_freq.default,
+        default = p_sampler.rand_freq.default,
         quantum = 0.002,
         wrap = false
     }
@@ -199,7 +333,7 @@ function init_params()
         max = 100.0,
         warp = 'lin',
         step = 0.01,
-        default = p.rand_length_amount.default,
+        default = p_sampler.rand_length_amount.default,
         quantum = 0.002,
         wrap = false
     }
@@ -208,7 +342,7 @@ function init_params()
         max = 1.0,
         warp = 'lin',
         step = 0.01,
-        default = p.rand_length_unquantized.default,
+        default = p_sampler.rand_length_unquantized.default,
         quantum = 0.002,
         wrap = false
     }
@@ -217,7 +351,7 @@ function init_params()
         max = 100.0,
         warp = 'lin',
         step = 0.01,
-        default = p.rand_pan_amount.default,
+        default = p_sampler.rand_pan_amount.default,
         quantum = 0.002,
         wrap = false
     }
@@ -226,7 +360,7 @@ function init_params()
         max = 1.0,
         warp = 'lin',
         step = 0.01,
-        default = p.release.default,
+        default = p_sampler.release.default,
         quantum = 0.002,
         wrap = false
     }
@@ -247,20 +381,16 @@ function init_params()
         end
         params:set("rotation", 0)
     end)
-    params:add_control(p.attack.name, "attack", percentage)
-    params:add_control(p.cutoff.name, "cutoff", cutoff)
-    params:set_action(p.cutoff.name, function(x)
-        engine.set_filter("cutoff", x)
-    end)
-    params:add_control(p.length.name, "length", percentage)
-    params:add_control(p.level.name, "level", percentage)
-    params:add_control(p.loop.name, "loop", percentage)
-    params:add_control(p.rand_freq.name, "rand freq", percentage)
-    params:add_control(p.rand_length_amount.name, "rand length", percentage)
-    params:add_control(p.rand_length_unquantized.name, "unquantize rand length", percentage)
-    params:add_control(p.rand_pan_amount.name, "rand pan", percentage)
-    params:add_control(p.playback_rate.name, "playback rate", percentage)
-    params:add_control(p.release.name, "release", percentage)
+    params:add_control(p_sampler.attack.name, "attack", percentage)
+    params:add_control(p_sampler.length.name, "length", percentage)
+    params:add_control(p_sampler.level.name, "level", percentage)
+    params:add_control(p_sampler.loop.name, "loop", percentage)
+    params:add_control(p_sampler.rand_freq.name, "rand freq", percentage)
+    params:add_control(p_sampler.rand_length_amount.name, "rand length", percentage)
+    params:add_control(p_sampler.rand_length_unquantized.name, "unquantize rand length", percentage)
+    params:add_control(p_sampler.rand_pan_amount.name, "rand pan", percentage)
+    params:add_control(p_sampler.playback_rate.name, "playback rate", percentage)
+    params:add_control(p_sampler.release.name, "release", percentage)
 
     for i = 1, max_num_steps do
         params:add_group("step " .. i, num_synth_params)
@@ -279,53 +409,55 @@ function init_params()
                 steps[i].altered = false
             end
         end)
-        params:add_control(p.attack.name .. i, "attack", attack)
-        params:set_action(p.attack.name .. i, function(x)
+        params:add_control(p_sampler.attack.name .. i, "attack", attack)
+        params:set_action(p_sampler.attack.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control(p.length.name .. i, "length", length)
-        params:set_action(p.length.name .. i, function(x)
+        params:add_control(p_sampler.length.name .. i, "length", length)
+        params:set_action(p_sampler.length.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control(p.level.name .. i, "level", level)
-        params:set_action(p.level.name .. i, function(x)
+        params:add_control(p_sampler.level.name .. i, "level", level)
+        params:set_action(p_sampler.level.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control(p.loop.name .. i, "loop", loop)
-        params:set_action(p.loop.name .. i, function(x)
+        params:add_control(p_sampler.loop.name .. i, "loop", loop)
+        params:set_action(p_sampler.loop.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control(p.rand_freq.name .. i, "rand freq", rand_freq)
-        params:set_action(p.rand_freq.name .. i, function(x)
+        params:add_control(p_sampler.rand_freq.name .. i, "rand freq", rand_freq)
+        params:set_action(p_sampler.rand_freq.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control(p.rand_length_amount.name .. i, "rand length", rand_length_amount)
-        params:set_action(p.rand_length_amount.name .. i, function(x)
+        params:add_control(p_sampler.rand_length_amount.name .. i, "rand length", rand_length_amount)
+        params:set_action(p_sampler.rand_length_amount.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control(p.rand_length_unquantized.name .. i, "unquantize rand length", rand_length_unquantized)
-        params:set_action(p.rand_length_unquantized.name .. i, function(x)
+        params:add_control(p_sampler.rand_length_unquantized.name .. i, "unquantize rand length",
+            rand_length_unquantized)
+        params:set_action(p_sampler.rand_length_unquantized.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control(p.rand_pan_amount.name .. i, "rand pan", rand_pan_amount)
-        params:set_action(p.rand_pan_amount.name .. i, function(x)
+        params:add_control(p_sampler.rand_pan_amount.name .. i, "rand pan", rand_pan_amount)
+        params:set_action(p_sampler.rand_pan_amount.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_number(p.playback_rate.name .. i, "playback rate", -3, 4, 0)
-        params:set_action(p.playback_rate.name .. i, function(x)
+        params:add_number(p_sampler.playback_rate.name .. i, "playback rate", -3, 4, 0)
+        params:set_action(p_sampler.playback_rate.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
-        params:add_control(p.release.name .. i, "release", release)
-        params:set_action(p.release.name .. i, function(x)
+        params:add_control(p_sampler.release.name .. i, "release", release)
+        params:set_action(p_sampler.release.name .. i, function(x)
             params:set("altered" .. i, params:get("altered" .. i) ~ 1)
         end)
     end
 end
 
 function rotate(x)
-    local params_to_rotate = {"enabled", "altered", p.attack.name, p.length.name, p.level.name, p.loop.name,
-                              p.playback_rate.name, p.rand_freq.name, p.rand_length_amount.name,
-                              p.rand_length_unquantized.name, p.rand_pan_amount.name, p.release.name}
+    local params_to_rotate = {"enabled", "altered", p_sampler.attack.name, p_sampler.length.name, p_sampler.level.name,
+                              p_sampler.loop.name, p_sampler.playback_rate.name, p_sampler.rand_freq.name,
+                              p_sampler.rand_length_amount.name, p_sampler.rand_length_unquantized.name,
+                              p_sampler.rand_pan_amount.name, p_sampler.release.name}
     local num_steps = params:get("num_steps")
 
     -- store all params in a table
@@ -365,8 +497,9 @@ function rotate(x)
 end
 
 function params_not_default(step)
-    local params_to_check = {p.attack, p.length, p.level, p.loop, p.rand_freq, p.rand_length_amount,
-                             p.rand_length_unquantized, p.rand_pan_amount, p.playback_rate, p.release}
+    local params_to_check = {p_sampler.attack, p_sampler.length, p_sampler.level, p_sampler.loop, p_sampler.rand_freq,
+                             p_sampler.rand_length_amount, p_sampler.rand_length_unquantized, p_sampler.rand_pan_amount,
+                             p_sampler.playback_rate, p_sampler.release}
     for _, param in ipairs(params_to_check) do
         if params:get(param.name .. step) ~= param.default then
             return true
@@ -455,32 +588,25 @@ function get_active_steps(steps)
 end
 
 function send_next_step(step)
-    local params_to_check = {p.attack.name, p.loop.name, p.length.name, p.level.name, p.playback_rate.name,
-                             p.rand_freq.name, p.rand_length_amount.name, p.rand_length_unquantized.name,
-                             p.rand_pan_amount.name, p.release.name}
+    local params_to_check = {p_sampler.attack.name, p_sampler.loop.name, p_sampler.length.name, p_sampler.level.name,
+                             p_sampler.playback_rate.name, p_sampler.rand_freq.name, p_sampler.rand_length_amount.name,
+                             p_sampler.rand_length_unquantized.name, p_sampler.rand_pan_amount.name,
+                             p_sampler.release.name}
     local engine_params = {}
     for i, param in ipairs(params_to_check) do
         local step_value = params:get(param .. step)
         local range = params:get_range(param .. step)
         local offset = params:get(param)
         local offset_step_value = step_value + (offset / 100) * (range[2] - range[1])
-        if param == p.rand_length_unquantized.name then
-            if offset_step_value == 0 then
-                offset_step_value = 0
-            elseif offset_step_value == 1 then
-                offset_step_value = 1
-            else
-                offset_step_value = math.random() < offset_step_value and 1 or 0
-            end
-        elseif param == p.loop.name then
-            if offset_step_value == 0 then
-                offset_step_value = 0
-            elseif offset_step_value == 1 then
-                offset_step_value = 1
-            else
-                offset_step_value = math.random() < offset_step_value and 1 or 0
-            end
+
+        if param == p_sampler.rand_length_unquantized.name or param == p_sampler.loop.name then
+            -- If the parameter is rand_length_unquantized or loop,
+            -- randomly set the offset_step_value to either 0 or 1
+            -- unless it's already 0 or 1
+            offset_step_value = (offset_step_value == 0 or offset_step_value == 1) and offset_step_value or
+                                    (math.random() < offset_step_value and 1 or 0)
         end
+
         local clamped_step_value = util.clamp(offset_step_value, range[1], range[2])
 
         print(param .. " step: " .. step_value)
@@ -520,27 +646,30 @@ function enc(n, d)
             if selected_screen_param == 1 then
                 params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
             elseif selected_screen_param == 2 then
-                params:set(p.attack.name, util.clamp(params:get(p.attack.name) + d / 10, -100, 100))
+                params:set(p_sampler.attack.name, util.clamp(params:get(p_sampler.attack.name) + d / 10, -100, 100))
             elseif selected_screen_param == 3 then
-                params:set(p.length.name, util.clamp(params:get(p.length.name) + d / 10, -100, 100))
+                params:set(p_sampler.length.name, util.clamp(params:get(p_sampler.length.name) + d / 10, -100, 100))
             elseif selected_screen_param == 4 then
-                params:set(p.level.name, util.clamp(params:get(p.level.name) + d / 10, -100, 100))
+                params:set(p_sampler.level.name, util.clamp(params:get(p_sampler.level.name) + d / 10, -100, 100))
             elseif selected_screen_param == 5 then
-                params:set(p.playback_rate.name, util.clamp(params:get(p.playback_rate.name) + d / 10, -100, 100))
+                params:set(p_sampler.playback_rate.name,
+                    util.clamp(params:get(p_sampler.playback_rate.name) + d / 10, -100, 100))
             elseif selected_screen_param == 6 then
-                params:set(p.rand_freq.name, util.clamp(params:get(p.rand_freq.name) + d / 10, -100, 100))
+                params:set(p_sampler.rand_freq.name,
+                    util.clamp(params:get(p_sampler.rand_freq.name) + d / 10, -100, 100))
             elseif selected_screen_param == 7 then
-                params:set(p.rand_length_amount.name,
-                    util.clamp(params:get(p.rand_length_amount.name) + d / 10, -100, 100))
+                params:set(p_sampler.rand_length_amount.name,
+                    util.clamp(params:get(p_sampler.rand_length_amount.name) + d / 10, -100, 100))
             elseif selected_screen_param == 8 then
-                params:set(p.rand_length_unquantized.name,
-                    util.clamp(params:get(p.rand_length_unquantized.name) + d / 10, -100, 100))
+                params:set(p_sampler.rand_length_unquantized.name,
+                    util.clamp(params:get(p_sampler.rand_length_unquantized.name) + d / 10, -100, 100))
             elseif selected_screen_param == 9 then
-                params:set(p.rand_pan_amount.name, util.clamp(params:get(p.rand_pan_amount.name) + d / 10, -100, 100))
+                params:set(p_sampler.rand_pan_amount.name,
+                    util.clamp(params:get(p_sampler.rand_pan_amount.name) + d / 10, -100, 100))
             elseif selected_screen_param == 10 then
-                params:set(p.release.name, util.clamp(params:get(p.release.name) + d / 10, -100, 100))
+                params:set(p_sampler.release.name, util.clamp(params:get(p_sampler.release.name) + d / 10, -100, 100))
             elseif selected_screen_param == 11 then
-                params:set(p.loop.name, util.clamp(params:get(p.loop.name) + d / 10, -100, 100))
+                params:set(p_sampler.loop.name, util.clamp(params:get(p_sampler.loop.name) + d / 10, -100, 100))
             end
         end
     end
@@ -554,35 +683,35 @@ function enc(n, d)
             if selected_screen_param == 1 then
                 params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
             elseif selected_screen_param == 2 then
-                params:set(p.attack.name .. selected_step,
-                    util.clamp(params:get(p.attack.name .. selected_step) + d / 100, 0.01, 1))
+                params:set(p_sampler.attack.name .. selected_step,
+                    util.clamp(params:get(p_sampler.attack.name .. selected_step) + d / 100, 0.01, 1))
             elseif selected_screen_param == 3 then
-                params:set(p.length.name .. selected_step,
-                    util.clamp(params:get(p.length.name .. selected_step) + d / 10, -100, 100))
+                params:set(p_sampler.length.name .. selected_step,
+                    util.clamp(params:get(p_sampler.length.name .. selected_step) + d / 10, -100, 100))
             elseif selected_screen_param == 4 then
-                params:set(p.level.name .. selected_step,
-                    util.clamp(params:get(p.level.name .. selected_step) + d / 10, 0, 1))
+                params:set(p_sampler.level.name .. selected_step,
+                    util.clamp(params:get(p_sampler.level.name .. selected_step) + d / 10, 0, 1))
             elseif selected_screen_param == 5 then
-                params:set(p.playback_rate.name .. selected_step,
-                    util.clamp(params:get(p.playback_rate.name .. selected_step) + d, -2, 3))
+                params:set(p_sampler.playback_rate.name .. selected_step,
+                    util.clamp(params:get(p_sampler.playback_rate.name .. selected_step) + d, -2, 3))
             elseif selected_screen_param == 6 then
-                params:set(p.rand_freq.name .. selected_step,
-                    util.clamp(params:get(p.rand_freq.name .. selected_step) + d / 10, 0, 100))
+                params:set(p_sampler.rand_freq.name .. selected_step,
+                    util.clamp(params:get(p_sampler.rand_freq.name .. selected_step) + d / 10, 0, 100))
             elseif selected_screen_param == 7 then
-                params:set(p.rand_length_amount.name .. selected_step,
-                    util.clamp(params:get(p.rand_length_amount.name .. selected_step) + d / 10, 0, 100))
+                params:set(p_sampler.rand_length_amount.name .. selected_step,
+                    util.clamp(params:get(p_sampler.rand_length_amount.name .. selected_step) + d / 10, 0, 100))
             elseif selected_screen_param == 8 then
-                params:set(p.rand_length_unquantized.name .. selected_step,
-                    util.clamp(params:get(p.rand_length_unquantized.name .. selected_step) + d / 100, 0, 1))
+                params:set(p_sampler.rand_length_unquantized.name .. selected_step, util.clamp(
+                    params:get(p_sampler.rand_length_unquantized.name .. selected_step) + d / 100, 0, 1))
             elseif selected_screen_param == 9 then
-                params:set(p.rand_pan_amount.name .. selected_step,
-                    util.clamp(params:get(p.rand_pan_amount.name .. selected_step) + d / 10, 0, 100))
+                params:set(p_sampler.rand_pan_amount.name .. selected_step,
+                    util.clamp(params:get(p_sampler.rand_pan_amount.name .. selected_step) + d / 10, 0, 100))
             elseif selected_screen_param == 10 then
-                params:set(p.release.name .. selected_step,
-                    util.clamp(params:get(p.release.name .. selected_step) + d / 100, 0.01, 1))
+                params:set(p_sampler.release.name .. selected_step,
+                    util.clamp(params:get(p_sampler.release.name .. selected_step) + d / 100, 0.01, 1))
             elseif selected_screen_param == 11 then
-                params:set(p.loop.name .. selected_step,
-                    util.clamp(params:get(p.loop.name .. selected_step) + d / 100, 0, 1))
+                params:set(p_sampler.loop.name .. selected_step,
+                    util.clamp(params:get(p_sampler.loop.name .. selected_step) + d / 100, 0, 1))
             end
         end
     end
@@ -725,61 +854,61 @@ function redraw()
         screen.move(55, 15)
         screen.text_right("atk:")
         screen.move(60, 15)
-        screen.text(params:get(p.attack.name))
+        screen.text(params:get(p_sampler.attack.name))
 
         screen.level(selected_screen_param == 3 and 15 or 2)
         screen.move(55, 25)
         screen.text_right("len:")
         screen.move(60, 25)
-        screen.text(params:get(p.length.name))
+        screen.text(params:get(p_sampler.length.name))
 
         screen.level(selected_screen_param == 4 and 15 or 2)
         screen.move(55, 35)
         screen.text_right("lvl:")
         screen.move(60, 35)
-        screen.text(params:get(p.level.name))
+        screen.text(params:get(p_sampler.level.name))
 
         screen.level(selected_screen_param == 5 and 15 or 2)
         screen.move(55, 45)
         screen.text_right("rate:")
         screen.move(60, 45)
-        screen.text(params:get(p.playback_rate.name))
+        screen.text(params:get(p_sampler.playback_rate.name))
 
         screen.level(selected_screen_param == 6 and 15 or 2)
         screen.move(55, 55)
         screen.text_right("rFreq:")
         screen.move(60, 55)
-        screen.text(params:get(p.rand_freq.name))
+        screen.text(params:get(p_sampler.rand_freq.name))
 
         screen.level(selected_screen_param == 7 and 15 or 2)
         screen.move(105, 15)
         screen.text_right("rLen:")
         screen.move(110, 15)
-        screen.text(params:get(p.rand_length_amount.name))
+        screen.text(params:get(p_sampler.rand_length_amount.name))
 
         screen.level(selected_screen_param == 8 and 15 or 2)
         screen.move(105, 25)
         screen.text_right("rLenQ:")
         screen.move(110, 25)
-        screen.text(params:get(p.rand_length_unquantized.name))
+        screen.text(params:get(p_sampler.rand_length_unquantized.name))
 
         screen.level(selected_screen_param == 9 and 15 or 2)
         screen.move(105, 35)
         screen.text_right("rPan:")
         screen.move(110, 35)
-        screen.text(params:get(p.rand_pan_amount.name))
+        screen.text(params:get(p_sampler.rand_pan_amount.name))
 
         screen.level(selected_screen_param == 10 and 15 or 2)
         screen.move(105, 45)
         screen.text_right("rel:")
         screen.move(110, 45)
-        screen.text(params:get(p.release.name))
+        screen.text(params:get(p_sampler.release.name))
 
         screen.level(selected_screen_param == 11 and 15 or 2)
         screen.move(105, 55)
         screen.text_right("loop:")
         screen.move(110, 55)
-        screen.text(params:get(p.loop.name))
+        screen.text(params:get(p_sampler.loop.name))
 
     elseif pages.index == 3 then
         -- step
@@ -805,61 +934,61 @@ function redraw()
         screen.move(55, 15)
         screen.text_right("atk:")
         screen.move(60, 15)
-        screen.text(params:get(p.attack.name .. selected_step))
+        screen.text(params:get(p_sampler.attack.name .. selected_step))
 
         screen.level(selected_screen_param == 3 and 15 or 2)
         screen.move(55, 25)
         screen.text_right("len:")
         screen.move(60, 25)
-        screen.text(params:get(p.length.name .. selected_step))
+        screen.text(params:get(p_sampler.length.name .. selected_step))
 
         screen.level(selected_screen_param == 4 and 15 or 2)
         screen.move(55, 35)
         screen.text_right("lvl:")
         screen.move(60, 35)
-        screen.text(params:get(p.level.name .. selected_step))
+        screen.text(params:get(p_sampler.level.name .. selected_step))
 
         screen.level(selected_screen_param == 5 and 15 or 2)
         screen.move(55, 45)
         screen.text_right("rate:")
         screen.move(60, 45)
-        screen.text(params:get(p.playback_rate.name .. selected_step))
+        screen.text(params:get(p_sampler.playback_rate.name .. selected_step))
 
         screen.level(selected_screen_param == 6 and 15 or 2)
         screen.move(55, 55)
         screen.text_right("rFreq:")
         screen.move(60, 55)
-        screen.text(params:get(p.rand_freq.name .. selected_step))
+        screen.text(params:get(p_sampler.rand_freq.name .. selected_step))
 
         screen.level(selected_screen_param == 7 and 15 or 2)
         screen.move(105, 15)
         screen.text_right("rLen:")
         screen.move(110, 15)
-        screen.text(params:get(p.rand_length_amount.name .. selected_step))
+        screen.text(params:get(p_sampler.rand_length_amount.name .. selected_step))
 
         screen.level(selected_screen_param == 8 and 15 or 2)
         screen.move(105, 25)
         screen.text_right("rLenQ:")
         screen.move(110, 25)
-        screen.text(params:get(p.rand_length_unquantized.name .. selected_step))
+        screen.text(params:get(p_sampler.rand_length_unquantized.name .. selected_step))
 
         screen.level(selected_screen_param == 9 and 15 or 2)
         screen.move(105, 35)
         screen.text_right("rPan:")
         screen.move(110, 35)
-        screen.text(params:get(p.rand_pan_amount.name .. selected_step))
+        screen.text(params:get(p_sampler.rand_pan_amount.name .. selected_step))
 
         screen.level(selected_screen_param == 10 and 15 or 2)
         screen.move(105, 45)
         screen.text_right("rel:")
         screen.move(110, 45)
-        screen.text(params:get(p.release.name .. selected_step))
+        screen.text(params:get(p_sampler.release.name .. selected_step))
 
         screen.level(selected_screen_param == 11 and 15 or 2)
         screen.move(105, 55)
         screen.text_right("loop:")
         screen.move(110, 55)
-        screen.text(params:get(p.loop.name .. selected_step))
+        screen.text(params:get(p_sampler.loop.name .. selected_step))
     end
 
     screen_dirty = false
