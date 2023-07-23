@@ -337,5 +337,6 @@ DelarSequencer {
 		this.stop();
 		filter.free;
 		synth.free;
+		sample.free;
 	}
 }
