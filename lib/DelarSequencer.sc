@@ -99,7 +99,7 @@ DelarSequencer {
 			var sustain = (duration - (attack + release)).max(0);
 			var env = EnvGen.ar(Env.new([0, 1, 1, 0], [attack, sustain, release]), \t_gate.kr(0));
 			var lfo = SinOsc.kr(\lfoSpeed.kr(1.0));
-			var mod = ((20000 * \modEnv.kr(0)) * env) + ((20000 * \modLfo.kr(0)) * lfo);
+			var mod = ((LinLin.kr(\modEnv.kr(0), -1, 1, -1000, 1000)) * env) + ((LinLin.kr(\modLfo.kr(0), -1, 1, -1000, 1000)) * lfo);
 			var cutoff = Lag3.kr(\cutoff.kr(800)) + mod;
 			var resonance = Lag3.kr(\resonance.kr(1.0).max(0.1).min(1.0));
 			var filter = BLowPass.ar(sig, cutoff.max(30).min(20000), resonance);

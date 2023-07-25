@@ -148,7 +148,7 @@ function init_filter_params()
     cutoff = controlspec.def {
         min = 30,
         max = 20000,
-        warp = 'lin',
+        warp = 'exp',
         step = 0.1,
         default = p_filter.cutoff.default,
         quantum = 0.001,
@@ -191,7 +191,7 @@ function init_filter_params()
         wrap = false
     }
     mod_env = controlspec.def {
-        min = 0.0,
+        min = -1.0,
         max = 1.0,
         warp = 'lin',
         step = 0.01,
@@ -200,7 +200,7 @@ function init_filter_params()
         wrap = false
     }
     mod_lfo = controlspec.def {
-        min = 0.0,
+        min = -1.0,
         max = 1.0,
         warp = 'lin',
         step = 0.01,
