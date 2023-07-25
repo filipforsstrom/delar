@@ -733,17 +733,7 @@ function redraw()
 
     pages:redraw()
 
-    -- for m = 1, 5 do
-    --     for n = 1, 5 do
-    --         screen.rect(0.5 + m * 9, 0.5 + n * 9, 6, 6) -- (x,y,width,height)
-    --         l = 2
-    --         screen.level(l)
-    --         screen.stroke()
-    --     end
-    -- end
-
     if pages.index == 1 then
-
         local selected_step = params:get("selected_step")
         local playing_step = playing_step
 
@@ -756,8 +746,8 @@ function redraw()
         local numRows = 8
 
         -- Calculate the starting position of the grid to center it on the screen
-        local startX = (screenWidth - (numColumns * stepSizeX)) / 2
-        local startY = (screenHeight - (numRows * stepSizeY)) / 2
+        local startX = (screenWidth - (numColumns * stepSizeX)) / 2 - stepSizeX
+        local startY = (screenHeight - (numRows * stepSizeY)) / 2 - stepSizeY
 
         -- Full grid
         for row = 1, numRows do
@@ -826,6 +816,14 @@ function redraw()
                 end
             end
         end
+
+        -- draw a crosshair in the center of the screen
+        -- screen.level(15)
+        -- screen.move(screenWidth / 2, 0)
+        -- screen.line(screenWidth / 2, screenHeight)
+        -- screen.move(0, screenHeight / 2)
+        -- screen.line(screenWidth, screenHeight / 2)
+        -- screen.stroke()
 
     elseif pages.index == 2 then
         -- step
