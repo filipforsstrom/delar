@@ -512,14 +512,45 @@ function key(n, z)
         end
     end
 
-    if n == 3 and z == 1 then
-        -- toggle step enabled/disabled
-        local selected_step = params:get("selected_step")
-        if params:get("enabled" .. selected_step) == 1 then
-            params:set("enabled" .. selected_step, 0)
-        else
-            params:set("enabled" .. selected_step, 1)
+    if pages.index == 1 then
+        if n == 3 and z == 1 then -- toggle step enabled/disabled
+            local selected_step = params:get("selected_step")
+            if params:get("enabled" .. selected_step) == 1 then
+                params:set("enabled" .. selected_step, 0)
+            else
+                params:set("enabled" .. selected_step, 1)
+            end
         end
+    end
+
+    if pages.index == 2 then
+        if n == 3 and z == 1 then
+            set_all_params_default(params:get("selected_step"))
+        end
+    else
+        if pages.index == 3 then
+            if n == 3 and z == 1 then
+                set_all_offset_default()
+            end
+        end
+    end
+end
+
+function set_all_params_default(step)
+    local params_to_set = {p_sampler.attack, p_sampler.length, p_sampler.level, p_sampler.loop, p_sampler.rand_freq,
+                           p_sampler.rand_length_amount, p_sampler.rand_length_unquantized, p_sampler.rand_pan_amount,
+                           p_sampler.playback_rate, p_sampler.release}
+    for _, param in ipairs(params_to_set) do
+        params:set(param.name .. step, param.default)
+    end
+end
+
+function set_all_offset_default()
+    local params_to_set = {p_sampler.attack, p_sampler.length, p_sampler.level, p_sampler.loop, p_sampler.rand_freq,
+                           p_sampler.rand_length_amount, p_sampler.rand_length_unquantized, p_sampler.rand_pan_amount,
+                           p_sampler.playback_rate, p_sampler.release}
+    for _, param in ipairs(params_to_set) do
+        params:set(param.name, 0)
     end
 end
 
@@ -618,8 +649,7 @@ end
 
 function enc(n, d)
     local selected_step = params:get("selected_step")
-    if n == 1 then
-        -- Page scroll
+    if n == 1 then -- Page scroll
         pages:set_index_delta(util.clamp(d, -1, 1), false)
     end
 
