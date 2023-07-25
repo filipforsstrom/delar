@@ -641,43 +641,6 @@ function enc(n, d)
             if selected_screen_param == 1 then
                 params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
             elseif selected_screen_param == 2 then
-                params:set(p_sampler.attack.name, util.clamp(params:get(p_sampler.attack.name) + d / 10, -100, 100))
-            elseif selected_screen_param == 3 then
-                params:set(p_sampler.length.name, util.clamp(params:get(p_sampler.length.name) + d / 10, -100, 100))
-            elseif selected_screen_param == 4 then
-                params:set(p_sampler.level.name, util.clamp(params:get(p_sampler.level.name) + d / 10, -100, 100))
-            elseif selected_screen_param == 5 then
-                params:set(p_sampler.playback_rate.name,
-                    util.clamp(params:get(p_sampler.playback_rate.name) + d / 10, -100, 100))
-            elseif selected_screen_param == 6 then
-                params:set(p_sampler.rand_freq.name,
-                    util.clamp(params:get(p_sampler.rand_freq.name) + d / 10, -100, 100))
-            elseif selected_screen_param == 7 then
-                params:set(p_sampler.rand_length_amount.name,
-                    util.clamp(params:get(p_sampler.rand_length_amount.name) + d / 10, -100, 100))
-            elseif selected_screen_param == 8 then
-                params:set(p_sampler.rand_length_unquantized.name,
-                    util.clamp(params:get(p_sampler.rand_length_unquantized.name) + d / 10, -100, 100))
-            elseif selected_screen_param == 9 then
-                params:set(p_sampler.rand_pan_amount.name,
-                    util.clamp(params:get(p_sampler.rand_pan_amount.name) + d / 10, -100, 100))
-            elseif selected_screen_param == 10 then
-                params:set(p_sampler.release.name, util.clamp(params:get(p_sampler.release.name) + d / 10, -100, 100))
-            elseif selected_screen_param == 11 then
-                params:set(p_sampler.loop.name, util.clamp(params:get(p_sampler.loop.name) + d / 10, -100, 100))
-            end
-        end
-    end
-
-    if pages.index == 3 then
-        if n == 2 then
-            selected_screen_param = util.clamp(selected_screen_param + d, 1, num_screen_params)
-        end
-
-        if n == 3 then
-            if selected_screen_param == 1 then
-                params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
-            elseif selected_screen_param == 2 then
                 params:set(p_sampler.attack.name .. selected_step,
                     util.clamp(params:get(p_sampler.attack.name .. selected_step) + d / 100, 0.01, 1))
             elseif selected_screen_param == 3 then
@@ -707,6 +670,41 @@ function enc(n, d)
             elseif selected_screen_param == 11 then
                 params:set(p_sampler.loop.name .. selected_step,
                     util.clamp(params:get(p_sampler.loop.name .. selected_step) + d / 100, 0, 1))
+            end
+        end
+    end
+
+    if pages.index == 3 then
+        if n == 2 then
+            selected_screen_param = util.clamp(selected_screen_param + d, 1, num_screen_params)
+        end
+
+        if n == 3 then
+            if selected_screen_param == 2 then
+                params:set(p_sampler.attack.name, util.clamp(params:get(p_sampler.attack.name) + d / 10, -100, 100))
+            elseif selected_screen_param == 3 then
+                params:set(p_sampler.length.name, util.clamp(params:get(p_sampler.length.name) + d / 10, -100, 100))
+            elseif selected_screen_param == 4 then
+                params:set(p_sampler.level.name, util.clamp(params:get(p_sampler.level.name) + d / 10, -100, 100))
+            elseif selected_screen_param == 5 then
+                params:set(p_sampler.playback_rate.name,
+                    util.clamp(params:get(p_sampler.playback_rate.name) + d / 10, -100, 100))
+            elseif selected_screen_param == 6 then
+                params:set(p_sampler.rand_freq.name,
+                    util.clamp(params:get(p_sampler.rand_freq.name) + d / 10, -100, 100))
+            elseif selected_screen_param == 7 then
+                params:set(p_sampler.rand_length_amount.name,
+                    util.clamp(params:get(p_sampler.rand_length_amount.name) + d / 10, -100, 100))
+            elseif selected_screen_param == 8 then
+                params:set(p_sampler.rand_length_unquantized.name,
+                    util.clamp(params:get(p_sampler.rand_length_unquantized.name) + d / 10, -100, 100))
+            elseif selected_screen_param == 9 then
+                params:set(p_sampler.rand_pan_amount.name,
+                    util.clamp(params:get(p_sampler.rand_pan_amount.name) + d / 10, -100, 100))
+            elseif selected_screen_param == 10 then
+                params:set(p_sampler.release.name, util.clamp(params:get(p_sampler.release.name) + d / 10, -100, 100))
+            elseif selected_screen_param == 11 then
+                params:set(p_sampler.loop.name, util.clamp(params:get(p_sampler.loop.name) + d / 10, -100, 100))
             end
         end
     end
@@ -817,172 +815,222 @@ function redraw()
             end
         end
 
-        -- draw a crosshair in the center of the screen
-        -- screen.level(15)
-        -- screen.move(screenWidth / 2, 0)
-        -- screen.line(screenWidth / 2, screenHeight)
-        -- screen.move(0, screenHeight / 2)
-        -- screen.line(screenWidth, screenHeight / 2)
-        -- screen.stroke()
-
     elseif pages.index == 2 then
-        -- step
-        screen.level(15)
-        screen.move(5, 5)
-
+        -- position
+        screen.level(2)
+        screen.move(90, 5)
+        screen.text_right("pos ")
+        screen.move(95, 5)
         if playing_step > 0 then
-            screen.text("step: " .. playing_step)
+            screen.text(playing_step)
         else
-            screen.text("step: -")
-        end
-
-        -- params
-        screen.level(selected_screen_param == 1 and 15 or 2)
-        screen.move(80, 5)
-        screen.text_right("step:")
-        screen.move(85, 5)
-        screen.text("all")
-
-        screen.level(selected_screen_param == 2 and 15 or 2)
-        screen.move(55, 15)
-        screen.text_right("atk:")
-        screen.move(60, 15)
-        screen.text(params:get(p_sampler.attack.name))
-
-        screen.level(selected_screen_param == 3 and 15 or 2)
-        screen.move(55, 25)
-        screen.text_right("len:")
-        screen.move(60, 25)
-        screen.text(params:get(p_sampler.length.name))
-
-        screen.level(selected_screen_param == 4 and 15 or 2)
-        screen.move(55, 35)
-        screen.text_right("lvl:")
-        screen.move(60, 35)
-        screen.text(params:get(p_sampler.level.name))
-
-        screen.level(selected_screen_param == 5 and 15 or 2)
-        screen.move(55, 45)
-        screen.text_right("rate:")
-        screen.move(60, 45)
-        screen.text(params:get(p_sampler.playback_rate.name))
-
-        screen.level(selected_screen_param == 6 and 15 or 2)
-        screen.move(55, 55)
-        screen.text_right("rFreq:")
-        screen.move(60, 55)
-        screen.text(params:get(p_sampler.rand_freq.name))
-
-        screen.level(selected_screen_param == 7 and 15 or 2)
-        screen.move(105, 15)
-        screen.text_right("rLen:")
-        screen.move(110, 15)
-        screen.text(params:get(p_sampler.rand_length_amount.name))
-
-        screen.level(selected_screen_param == 8 and 15 or 2)
-        screen.move(105, 25)
-        screen.text_right("rLenQ:")
-        screen.move(110, 25)
-        screen.text(params:get(p_sampler.rand_length_unquantized.name))
-
-        screen.level(selected_screen_param == 9 and 15 or 2)
-        screen.move(105, 35)
-        screen.text_right("rPan:")
-        screen.move(110, 35)
-        screen.text(params:get(p_sampler.rand_pan_amount.name))
-
-        screen.level(selected_screen_param == 10 and 15 or 2)
-        screen.move(105, 45)
-        screen.text_right("rel:")
-        screen.move(110, 45)
-        screen.text(params:get(p_sampler.release.name))
-
-        screen.level(selected_screen_param == 11 and 15 or 2)
-        screen.move(105, 55)
-        screen.text_right("loop:")
-        screen.move(110, 55)
-        screen.text(params:get(p_sampler.loop.name))
-
-    elseif pages.index == 3 then
-        -- step
-        screen.level(15)
-        screen.move(5, 5)
-
-        if playing_step > 0 then
-            screen.text("step: " .. playing_step)
-        else
-            screen.text("step: -")
+            screen.text("-")
         end
 
         -- params
         local selected_step = params:get("selected_step")
 
         screen.level(selected_screen_param == 1 and 15 or 2)
-        screen.move(80, 5)
+        screen.move(40, 5)
         screen.text_right("step:")
-        screen.move(85, 5)
+        screen.move(45, 5)
         screen.text(selected_step)
 
         screen.level(selected_screen_param == 2 and 15 or 2)
-        screen.move(55, 15)
+        screen.move(40, 15)
         screen.text_right("atk:")
-        screen.move(60, 15)
+        screen.move(45, 15)
         screen.text(params:get(p_sampler.attack.name .. selected_step))
 
         screen.level(selected_screen_param == 3 and 15 or 2)
-        screen.move(55, 25)
+        screen.move(40, 25)
         screen.text_right("len:")
-        screen.move(60, 25)
+        screen.move(45, 25)
         screen.text(params:get(p_sampler.length.name .. selected_step))
 
         screen.level(selected_screen_param == 4 and 15 or 2)
-        screen.move(55, 35)
+        screen.move(40, 35)
         screen.text_right("lvl:")
-        screen.move(60, 35)
+        screen.move(45, 35)
         screen.text(params:get(p_sampler.level.name .. selected_step))
 
         screen.level(selected_screen_param == 5 and 15 or 2)
-        screen.move(55, 45)
+        screen.move(40, 45)
         screen.text_right("rate:")
-        screen.move(60, 45)
+        screen.move(45, 45)
         screen.text(params:get(p_sampler.playback_rate.name .. selected_step))
 
         screen.level(selected_screen_param == 6 and 15 or 2)
-        screen.move(55, 55)
+        screen.move(40, 55)
         screen.text_right("rFreq:")
-        screen.move(60, 55)
+        screen.move(45, 55)
         screen.text(params:get(p_sampler.rand_freq.name .. selected_step))
 
         screen.level(selected_screen_param == 7 and 15 or 2)
-        screen.move(105, 15)
+        screen.move(90, 15)
         screen.text_right("rLen:")
-        screen.move(110, 15)
+        screen.move(95, 15)
         screen.text(params:get(p_sampler.rand_length_amount.name .. selected_step))
 
         screen.level(selected_screen_param == 8 and 15 or 2)
-        screen.move(105, 25)
+        screen.move(90, 25)
         screen.text_right("rLenQ:")
-        screen.move(110, 25)
+        screen.move(95, 25)
         screen.text(params:get(p_sampler.rand_length_unquantized.name .. selected_step))
 
         screen.level(selected_screen_param == 9 and 15 or 2)
-        screen.move(105, 35)
+        screen.move(90, 35)
         screen.text_right("rPan:")
-        screen.move(110, 35)
+        screen.move(95, 35)
         screen.text(params:get(p_sampler.rand_pan_amount.name .. selected_step))
 
         screen.level(selected_screen_param == 10 and 15 or 2)
-        screen.move(105, 45)
+        screen.move(90, 45)
         screen.text_right("rel:")
-        screen.move(110, 45)
+        screen.move(95, 45)
         screen.text(params:get(p_sampler.release.name .. selected_step))
 
         screen.level(selected_screen_param == 11 and 15 or 2)
-        screen.move(105, 55)
+        screen.move(90, 55)
         screen.text_right("loop:")
-        screen.move(110, 55)
+        screen.move(95, 55)
         screen.text(params:get(p_sampler.loop.name .. selected_step))
+
+    elseif pages.index == 3 then
+        -- position
+        screen.level(2)
+        screen.move(90, 5)
+        screen.text_right("pos ")
+        screen.move(95, 5)
+        if playing_step > 0 then
+            screen.text(playing_step)
+        else
+            screen.text("-")
+        end
+
+        screen.level(2)
+        screen.move(40, 5)
+        screen.text_right("offset")
+
+        -- offset params
+        screen.level(selected_screen_param == 2 and 15 or 2)
+        screen.move(40, 15)
+        screen.text_right("atk:")
+        screen.move(45, 15)
+        local attack = params:get(p_sampler.attack.name)
+        if attack <= -100 or attack >= 100 then
+            screen.text(math.floor(attack))
+        else
+            screen.text(attack)
+        end
+
+        screen.level(selected_screen_param == 3 and 15 or 2)
+        screen.move(40, 25)
+        screen.text_right("len:")
+        screen.move(45, 25)
+        local length = params:get(p_sampler.length.name)
+        if length <= -100 or length >= 100 then
+            screen.text(math.floor(length))
+        else
+            screen.text(length)
+        end
+
+        screen.level(selected_screen_param == 4 and 15 or 2)
+        screen.move(40, 35)
+        screen.text_right("lvl:")
+        screen.move(45, 35)
+        local level = params:get(p_sampler.level.name)
+        if level <= -100 or level >= 100 then
+            screen.text(math.floor(level))
+        else
+            screen.text(level)
+        end
+
+        screen.level(selected_screen_param == 5 and 15 or 2)
+        screen.move(40, 45)
+        screen.text_right("rate:")
+        screen.move(45, 45)
+        local playback_rate = params:get(p_sampler.playback_rate.name)
+        if playback_rate <= -100 or playback_rate >= 100 then
+            screen.text(math.floor(playback_rate))
+        else
+            screen.text(playback_rate)
+        end
+
+        screen.level(selected_screen_param == 6 and 15 or 2)
+        screen.move(40, 55)
+        screen.text_right("rFreq:")
+        screen.move(45, 55)
+        local rand_freq = params:get(p_sampler.rand_freq.name)
+        if rand_freq <= -100 or rand_freq >= 100 then
+            screen.text(math.floor(rand_freq))
+        else
+            screen.text(rand_freq)
+        end
+
+        screen.level(selected_screen_param == 7 and 15 or 2)
+        screen.move(90, 15)
+        screen.text_right("rLen:")
+        screen.move(95, 15)
+        local rand_length_amount = params:get(p_sampler.rand_length_amount.name)
+        if rand_length_amount <= -100 or rand_length_amount >= 100 then
+            screen.text(math.floor(rand_length_amount))
+        else
+            screen.text(rand_length_amount)
+        end
+
+        screen.level(selected_screen_param == 8 and 15 or 2)
+        screen.move(90, 25)
+        screen.text_right("rLenQ:")
+        screen.move(95, 25)
+        local rand_length_unquantized = params:get(p_sampler.rand_length_unquantized.name)
+        if rand_length_unquantized <= -100 or rand_length_unquantized >= 100 then
+            screen.text(math.floor(rand_length_unquantized))
+        else
+            screen.text(rand_length_unquantized)
+        end
+
+        screen.level(selected_screen_param == 9 and 15 or 2)
+        screen.move(90, 35)
+        screen.text_right("rPan:")
+        screen.move(95, 35)
+        local rand_pan_amount = params:get(p_sampler.rand_pan_amount.name)
+        if rand_pan_amount <= -100 or rand_pan_amount >= 100 then
+            screen.text(math.floor(rand_pan_amount))
+        else
+            screen.text(rand_pan_amount)
+        end
+
+        screen.level(selected_screen_param == 10 and 15 or 2)
+        screen.move(90, 45)
+        screen.text_right("rel:")
+        screen.move(95, 45)
+        local release = params:get(p_sampler.release.name)
+        if release <= -100 or release >= 100 then
+            screen.text(math.floor(release))
+        else
+            screen.text(release)
+        end
+
+        screen.level(selected_screen_param == 11 and 15 or 2)
+        screen.move(90, 55)
+        screen.text_right("loop:")
+        screen.move(95, 55)
+        local loop = params:get(p_sampler.loop.name)
+        if loop <= -100 or loop >= 100 then
+            screen.text(math.floor(loop))
+        else
+            screen.text(loop)
+        end
     end
+
+    -- draw a crosshair in the center of the screen
+    -- screen.level(15)
+    -- screen.move(screenWidth / 2, 0)
+    -- screen.line(screenWidth / 2, screenHeight)
+    -- screen.move(0, screenHeight / 2)
+    -- screen.line(screenWidth, screenHeight / 2)
+    -- screen.stroke()
 
     screen_dirty = false
     screen.update()
