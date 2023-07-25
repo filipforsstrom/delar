@@ -6,7 +6,7 @@ g = grid.connect()
 leds = {}
 keys_counter = {}
 
-sample_path = paths.home .. "/dust/audio/delar/"
+sample_path = paths.home .. "/dust/audio/"
 is_playing = false
 playing_step = 0
 playing_step_led_brightness = 15
@@ -128,7 +128,7 @@ function init()
 
     params:bang()
     params:set("enabled32", 1)
-    engine.setSample(sample_path .. "piano1.wav")
+    engine.setSample(sample_path .. "delar/piano1.wav")
     is_playing = true
     -- engine.set_num_slices(max_num_steps)
 
