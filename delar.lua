@@ -1162,5 +1162,5 @@ function rotation_clock()
 end
 
 function cleanup()
-    engine.stop()
+    engine.free()
 end

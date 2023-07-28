@@ -16,6 +16,10 @@ Engine_DelarSequencer : CroneEngine {
 			kernel.freeSample();
 		});
 
+		this.addCommand(\free, "", {
+			kernel.free();
+		});
+
 		this.addCommand(\setSample, "s", { arg msg;
 			var path = msg[1];
 			kernel.setSample(path);
