@@ -1160,3 +1160,7 @@ function rotation_clock()
         end
     end
 end
+
+function cleanup()
+    engine.stop()
+end
