@@ -127,7 +127,7 @@ function init()
     init_params()
 
     params:bang()
-    -- params:set("enabled1", 1)
+    params:set("enabled1", 1)
     -- engine.setSample(sample_path .. "delar/piano1.wav")
     -- is_playing = true
     -- engine.set_num_slices(max_num_steps)
@@ -275,6 +275,7 @@ function init_params()
     params:add_file("sample", "sample", sample_path)
     params:set_action("sample", function(x)
         engine.setSample(x)
+        is_playing = true
     end)
 
     attack = controlspec.def {
