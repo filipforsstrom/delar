@@ -7,14 +7,12 @@ DelarSequencer {
 	var <doneLoadingCallback;
 
 	// sample data
-	var sample;
+	var buffer;
 
-	var synth;
+	var samplePlayer;
 	var filter;
 	var <filterParams;
 	var delay;
-	var chorus;
-	var <chorusParams;
 
 	// osc
 	var osc;
@@ -33,7 +31,6 @@ DelarSequencer {
 	var <>length;
 	var <>slices;
 	var <>activeSlices;
-	var <>stepCallback;
 	var <>attack;
 	var <>release;
 	var <>randFreq;
@@ -52,13 +49,6 @@ DelarSequencer {
 		if (targetNode.isNil, { targetNode = server; });
 		if (addAction.isNil, { addAction = \addToHead });
 
-		chorusParams = Dictionary.newFrom([
-			\time, 0.1,
-			\feedback, 0.0,
-			\mix, 0.5,
-			\level, 1.0,
-		]);
-
 		filterParams = Dictionary.newFrom([
 			\cutoff, 20000,
 			\resonance, 0,
@@ -72,17 +62,7 @@ DelarSequencer {
 			\level, 1.0,
 		]);
 
-		/*SynthDef.new(\Chorus_stereo, {
-			var sig = In.ar(\in.ir(12), 2);
-
-			var del = AllpassN.ar(sig, 0.5, \time.kr(0.05), \feedback.kr(0.0));
-			sig = sig.blend(del, \mix.kr(0.0));
-			Out.ar(\out.ir(14), sig * \level.ir(1.0));
-		}).send(server);
-
-		server.bind({ chorus = Synth.new(\Chorus_stereo) });
-
-		SynthDef.new(\Delay_stereo, {
+		/*SynthDef.new(\Delay_stereo, {
 			var sig = In.ar(\in.ir(14), 2);
 			var del = CombN.ar(sig, 5, \time.kr(1), \feedback.kr(5));
 			sig = sig.blend(del, \mix.kr(0.0));
@@ -100,7 +80,7 @@ DelarSequencer {
 			var env = EnvGen.ar(Env.new([0, 1, 1, 0], [attack, sustain, release]), \t_gate.kr(0));
 			var lfo = SinOsc.kr(\lfoSpeed.kr(1.0));
 			var mod = ((LinLin.kr(\modEnv.kr(0), -1, 1, -1000, 1000)) * env) + ((LinLin.kr(\modLfo.kr(0), -1, 1, -1000, 1000)) * lfo);
-			var cutoff = Lag3.kr(\cutoff.kr(800)) + mod;
+			var cutoff = Lag3.kr(\cutoff.kr(20000)) + mod;
 			var resonance = Lag3.kr(\resonance.kr(1.0).max(0.1).min(1.0));
 			var filter = BLowPass.ar(sig, cutoff.max(30).min(20000), resonance);
 			Out.ar(\out.ir(0), filter * \level.kr(1.0));
@@ -108,23 +88,7 @@ DelarSequencer {
 
 		server.bind({ filter = Synth.new(\Filter_stereo) });
 
-		SynthDef.new(\SampleSliceSequencer_1shot_env_raw_mono, {
-			var buf = \buffer.ir;
-			var rand = LFNoise1.kr(\randFreq.ir(0.5));
-			var rate = \rate.ir;
-			var duration = \duration.ir;
-			var attack = \attack.ir(0.01).min(duration);
-			var release = \release.ir(0.01).min(duration - attack);
-			var sustain = (duration - (attack + release)).max(0);
-			var env = EnvGen.ar(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction:2);
-			var phase = Phasor.ar(0, rate, \startFrame.ir, \endFrame.ir);
-			var snd = BufRd.ar(1, buf, phase);
-			snd = snd * env;
-			snd = Pan2.ar(snd, rand * \randPanAmount.kr(0));
-			Out.ar(\out.kr(10), (snd * \level.kr(0.9)).dup);
-		}).send(server);
-
-		SynthDef.new(\SampleSliceSequencer_1shot_env_raw_stereo, {
+		SynthDef.new(\SamplePlayer_mono, {
 			var buf = \buffer.ir;
 			var rand = LFNoise1.kr(\randFreq.ir(0.5));
 			var rate = \rate.ir.max(0.25);
@@ -135,30 +99,37 @@ DelarSequencer {
 			var env = EnvGen.ar(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction:2);
 			var phase = Phasor.ar(0, rate, \startFrame.ir, \endFrame.ir);
 			var snd = BufRd.ar(2, buf, phase);
-			// snd = snd * env;
-			var filter = BLowPass.ar(snd, \cutoff.ir(20000).max(30).min(20000));
-			filter = filter * env;
-			snd = Balance2.ar(filter[0], filter[1], rand * \randPanAmount.kr(0));
+			snd = snd * env;
+			snd = Pan2.ar(snd, rand * \randPanAmount.kr(0));
+			Out.ar(\out.kr(10), (snd * \level.kr(0.9)).dup);
+		}).send(server);
+
+		SynthDef.new(\SamplePlayer_stereo, {
+			var buf = \buffer.ir;
+			var rand = LFNoise1.kr(\randFreq.ir(0.5));
+			var rate = \rate.ir.max(0.25);
+			var duration = \duration.ir;
+			var attack = \attack.ir(0.01).max(0.01).min(duration);
+			var release = \release.ir(0.01).max(0.01).min(duration - attack);
+			var sustain = (duration - (attack + release)).max(0);
+			var env = EnvGen.ar(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction:2);
+			var phase = Phasor.ar(0, rate, \startFrame.ir, \endFrame.ir);
+			var snd = BufRd.ar(2, buf, phase);
+			snd = snd * env;
+			snd = Balance2.ar(snd[0], snd[1], rand * \randPanAmount.kr(0));
 			Out.ar(\out.ir(10), snd * \level.ir(0.9));
 		}).send(server);
+
+		osc = NetAddr.new("127.0.0.1", 10111);
+
+		currentStep = 0;
 
 		// Slice setup
 		numOfSlices = 128;
 		slices = Array.series(numOfSlices, 0, ((1.0 - 0.0) / (numOfSlices - 1)));
-		activeSlices = [0];
 		shortestFrameDuration = 1000;
 
-		// settable callback per step.
-		// this will after each synth is played, while the internal routine is waiting;
-		// its argument is the index of the upcoming step.
-		osc = NetAddr.new("127.0.0.1", 10111);
-		stepCallback = { arg step;
-			// osc.sendMsg("/step", step);
-			postln("step " ++ step);
-		};
-		currentStep = 0;
-
-		// Synth values
+		// samplePlayer values
 		playbackRate = 1.0;
 		startPosition = 0.0;
 		endPosition = 1.0;
@@ -180,7 +151,7 @@ DelarSequencer {
 	}
 
 	playCurrentStep {
-		var buffer, duration, startSlice, startFrame, endSlice, endFrame, sliceLength, rand, randLength, defSymbol, synthArgs;
+		var duration, startSlice, startFrame, endSlice, endFrame, sliceLength, rand, randLength, defSymbol, samplePlayerArgs;
 		// skip playing until one step is active
 		while ({
 			activeSlices.size < 1
@@ -189,20 +160,15 @@ DelarSequencer {
 			this.setCurrentStep(currentStep + 1);
 			0.1.wait;
 		});
-		buffer = sample;
+
 		defSymbol = if(buffer.numChannels > 1, {
-			\SampleSliceSequencer_1shot_env_raw_stereo;
+			\SamplePlayer_stereo;
 		}, {
-			\SampleSliceSequencer_1shot_env_raw_mono;
+			\SamplePlayer_mono;
 		});
 
-		if (playbackRate > 0, {
-			startFrame = 0;
-			endFrame = buffer.numFrames - 1;
-		}, {
-			endFrame = 0;
-			startFrame = buffer.numFrames - 1;
-		});
+		startFrame = 0;
+		endFrame = buffer.numFrames - 1;
 
 		startSlice = slices[(activeSlices[currentStep]).min(slices.size - 2)];
 		endSlice = slices[(activeSlices[currentStep] + 1).min(slices.size - 1)];
@@ -240,7 +206,7 @@ DelarSequencer {
 		[startFrame, endFrame, playbackRate, duration].postln;
 		["step:" + currentStep, "slice:" + activeSlices[currentStep]].postln;
 
-		synthArgs = [
+		samplePlayerArgs = [
 			attack: attack,
 			buffer: buffer.bufnum,
 			duration: duration,
@@ -254,13 +220,11 @@ DelarSequencer {
 			out: busOutput,
 		];
 
-		server.bind({ synth = Synth.new(defSymbol, synthArgs, targetNode, addAction) });
+		server.bind({ samplePlayer = Synth.new(defSymbol, samplePlayerArgs, targetNode, addAction) });
 		this.setFilterParam(\duration, duration);
-		this.setFilterParam(\release, 0.9);
 		this.setFilterParam(\t_gate, 1);
 		osc.sendMsg("/step", activeSlices[currentStep]);
 
-		// this.stepCallback.value(activeSlices[currentStep]);
 		this.setCurrentStep(currentStep + 1);
 
 		duration.wait;
@@ -285,12 +249,10 @@ DelarSequencer {
 	}
 
 	setSample { arg path;
-		var buf;
 		this.stop();
-		sample.free;
-		buf = Buffer.read(server, path, action: {
+		buffer.free;
+		buffer = Buffer.read(server, path, action: {
 			("Sample loaded.").postln;
-			sample = buf;
 			this.play();
 		});
 	}
@@ -302,11 +264,6 @@ DelarSequencer {
 
 	setSlice { arg slice;
 		activeSlices = [slice];
-	}
-
-	setChorusParam { arg paramKey, paramValue;
-		chorus.set(paramKey, paramValue);
-		chorusParams[paramKey] = paramValue;
 	}
 
 	setFilterParam { arg paramKey, paramValue;
@@ -330,13 +287,13 @@ DelarSequencer {
 
 	freeSample {
 		this.stop();
-		synth.free;
+		samplePlayer.free;
 	}
 
 	free {
 		this.stop();
 		filter.free;
-		synth.free;
-		sample.free;
+		samplePlayer.free;
+		buffer.free;
 	}
 }
