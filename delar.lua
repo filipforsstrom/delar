@@ -133,15 +133,15 @@ function init()
     -- engine.set_num_slices(max_num_steps)
 
     screen_dirty = true
-    screen_clock = clock.run(screen_redraw_clock)
-
     grid_dirty = true
+
+    -- clocks
+    screen_clock = clock.run(screen_redraw_clock)
     grid_clock = clock.run(grid_redraw_clock)
-
-    rotation_clock = clock.run(rotation_clock)
-
     playing_step_led_clock = clock.run(playing_step_led_clock)
     playing_step_screen_clock = clock.run(playing_step_screen_clock)
+    rotation_clock = clock.run(rotation_clock)
+
 end
 
 function init_filter_params()
@@ -151,71 +151,56 @@ function init_filter_params()
         warp = 'exp',
         step = 0.1,
         default = p_filter.cutoff.default,
-        quantum = 0.001,
-        wrap = false
+        quantum = 0.001
     }
     resonance = controlspec.def {
         min = 0,
         max = 1,
-        warp = 'lin',
         step = 0.01,
         default = p_filter.resonance.default,
-        quantum = 0.001,
-        wrap = false
+        quantum = 0.001
     }
     lfo_speed = controlspec.def {
         min = 0.1,
         max = 20,
-        warp = 'lin',
         step = 0.01,
         default = p_filter.lfo_speed.default,
-        quantum = 0.001,
-        wrap = false
+        quantum = 0.001
     }
     attack = controlspec.def {
         min = 0.01,
         max = 1.0,
-        warp = 'lin',
         step = 0.01,
         default = p_filter.attack.default,
-        quantum = 0.001,
-        wrap = false
+        quantum = 0.001
     }
     release = controlspec.def {
         min = 0.01,
         max = 1.0,
-        warp = 'lin',
         step = 0.01,
         default = p_filter.release.default,
-        quantum = 0.001,
-        wrap = false
+        quantum = 0.001
     }
     mod_env = controlspec.def {
         min = -1.0,
         max = 1.0,
-        warp = 'lin',
         step = 0.01,
         default = p_filter.mod_env.default,
-        quantum = 0.001,
-        wrap = false
+        quantum = 0.001
     }
     mod_lfo = controlspec.def {
         min = -1.0,
         max = 1.0,
-        warp = 'lin',
         step = 0.01,
         default = p_filter.mod_lfo.default,
-        quantum = 0.001,
-        wrap = false
+        quantum = 0.001
     }
     level = controlspec.def {
         min = 0.0,
         max = 1.0,
-        warp = 'lin',
         step = 0.01,
         default = p_filter.level.default,
-        quantum = 0.001,
-        wrap = false
+        quantum = 0.001
     }
 
     local length = 0
@@ -259,11 +244,16 @@ function init_filter_params()
 end
 
 function init_params()
-
+    params:add_file("sample", "sample", sample_path)
+    params:set_action("sample", function(x)
+        engine.setSample(x)
+        is_playing = true
+    end)
     params:add_number("num_steps", "num steps", 1, max_num_steps, 128)
     params:set_action("num_steps", function(x)
         engine.set_num_slices(x)
     end)
+    params:hide("num_steps")
     params:add_number("selected_step", "step", 1, max_num_steps, 1)
     params:set_action("selected_step", function(x)
         if x > params:get("num_steps") then
@@ -272,112 +262,7 @@ function init_params()
         grid_dirty = true
         screen_dirty = true
     end)
-    params:add_file("sample", "sample", sample_path)
-    params:set_action("sample", function(x)
-        engine.setSample(x)
-        is_playing = true
-    end)
-
-    attack = controlspec.def {
-        min = 0.01, -- the minimum value
-        max = 1.0, -- the maximum value
-        warp = 'lin', -- a shaping option for the raw value
-        step = 0.01, -- output value quantization
-        default = p_sampler.attack.default, -- default value
-        quantum = 0.002, -- each delta will change raw value by this much
-        wrap = false -- wrap around on overflow (true) or clamp (false)
-    }
-    length = controlspec.def {
-        min = -100.0,
-        max = 100.0,
-        warp = 'lin',
-        step = 0.01,
-        default = p_sampler.length.default,
-        quantum = 0.002,
-        wrap = false
-    }
-    level = controlspec.def {
-        min = 0.0,
-        max = 1.0,
-        warp = 'lin',
-        step = 0.01,
-        default = p_sampler.level.default,
-        quantum = 0.002,
-        wrap = false
-    }
-    loop = controlspec.def {
-        min = 0.0,
-        max = 1.0,
-        warp = 'lin',
-        step = 0.01,
-        default = p_sampler.loop.default,
-        quantum = 0.002,
-        wrap = false
-    }
-    -- playbackRate = controlspec.def {
-    --     min = 0.25,
-    --     max = 32.0,
-    --     warp = 'lin',
-    --     step = 0.0001,
-    --     default = p.playback_rate.default,
-    --     quantum = 0.0001,
-    --     wrap = false
-    -- }
-    rand_freq = controlspec.def {
-        min = 0.1,
-        max = 2.0,
-        warp = 'lin',
-        step = 0.01,
-        default = p_sampler.rand_freq.default,
-        quantum = 0.002,
-        wrap = false
-    }
-    rand_length_amount = controlspec.def {
-        min = 0.0,
-        max = 100.0,
-        warp = 'lin',
-        step = 0.01,
-        default = p_sampler.rand_length_amount.default,
-        quantum = 0.002,
-        wrap = false
-    }
-    rand_length_unquantized = controlspec.def {
-        min = 0.0,
-        max = 1.0,
-        warp = 'lin',
-        step = 0.01,
-        default = p_sampler.rand_length_unquantized.default,
-        quantum = 0.002,
-        wrap = false
-    }
-    rand_pan_amount = controlspec.def {
-        min = 0.0,
-        max = 100.0,
-        warp = 'lin',
-        step = 0.01,
-        default = p_sampler.rand_pan_amount.default,
-        quantum = 0.002,
-        wrap = false
-    }
-    release = controlspec.def {
-        min = 0.01,
-        max = 1.0,
-        warp = 'lin',
-        step = 0.01,
-        default = p_sampler.release.default,
-        quantum = 0.002,
-        wrap = false
-    }
-    percentage = controlspec.def {
-        min = -100,
-        max = 100,
-        warp = 'lin',
-        step = 0.1,
-        default = 0,
-        quantum = 0.0005,
-        wrap = false
-    }
-
+    params:hide("selected_step")
     params:add_number("rotation", "rotation", -1, 1, 0)
     params:set_action("rotation", function(x)
         if x > 0 or x < 0 then
@@ -385,6 +270,87 @@ function init_params()
         end
         params:set("rotation", 0)
     end)
+    params:hide("rotation")
+
+    attack = controlspec.def {
+        min = 0.01, -- the minimum value
+        max = 1.0, -- the maximum value
+        step = 0.01, -- output value quantization
+        default = p_sampler.attack.default, -- default value
+        quantum = 0.002 -- each delta will change raw value by this much
+    }
+    length = controlspec.def {
+        min = -100.0,
+        max = 100.0,
+        step = 0.01,
+        default = p_sampler.length.default,
+        quantum = 0.002
+    }
+    level = controlspec.def {
+        min = 0.0,
+        max = 1.0,
+        step = 0.01,
+        default = p_sampler.level.default,
+        quantum = 0.002
+    }
+    loop = controlspec.def {
+        min = 0.0,
+        max = 1.0,
+        step = 0.01,
+        default = p_sampler.loop.default,
+        quantum = 0.002
+    }
+    -- playbackRate = controlspec.def {
+    --     min = 0.25,
+    --     max = 32.0,
+    --     step = 0.0001,
+    --     default = p.playback_rate.default,
+    --     quantum = 0.0001,
+    -- }
+    rand_freq = controlspec.def {
+        min = 0.1,
+        max = 2.0,
+        step = 0.01,
+        default = p_sampler.rand_freq.default,
+        quantum = 0.002
+    }
+    rand_length_amount = controlspec.def {
+        min = 0.0,
+        max = 100.0,
+        step = 0.01,
+        default = p_sampler.rand_length_amount.default,
+        quantum = 0.002
+    }
+    rand_length_unquantized = controlspec.def {
+        min = 0.0,
+        max = 1.0,
+        step = 0.01,
+        default = p_sampler.rand_length_unquantized.default,
+        quantum = 0.002
+    }
+    rand_pan_amount = controlspec.def {
+        min = 0.0,
+        max = 100.0,
+        step = 0.01,
+        default = p_sampler.rand_pan_amount.default,
+        quantum = 0.002
+    }
+    release = controlspec.def {
+        min = 0.01,
+        max = 1.0,
+        step = 0.01,
+        default = p_sampler.release.default,
+        quantum = 0.002
+    }
+    percentage = controlspec.def {
+        min = -100,
+        max = 100,
+        step = 0.1,
+        default = 0,
+        quantum = 0.0005
+    }
+
+    -- offsets
     params:add_control(p_sampler.attack.name, "attack", percentage)
     params:add_control(p_sampler.length.name, "length", percentage)
     params:add_control(p_sampler.level.name, "level", percentage)
@@ -395,10 +361,20 @@ function init_params()
     params:add_control(p_sampler.rand_pan_amount.name, "rand pan", percentage)
     params:add_control(p_sampler.playback_rate.name, "playback rate", percentage)
     params:add_control(p_sampler.release.name, "release", percentage)
+    params:hide(p_sampler.attack.name)
+    params:hide(p_sampler.length.name)
+    params:hide(p_sampler.level.name)
+    params:hide(p_sampler.loop.name)
+    params:hide(p_sampler.rand_freq.name)
+    params:hide(p_sampler.rand_length_amount.name)
+    params:hide(p_sampler.rand_length_unquantized.name)
+    params:hide(p_sampler.rand_pan_amount.name)
+    params:hide(p_sampler.playback_rate.name)
+    params:hide(p_sampler.release.name)
 
     for i = 1, max_num_steps do
         params:add_group("step " .. i, num_synth_params)
-        -- params:hide("step " .. i)
+        params:hide("step " .. i)
         params:add_number("enabled" .. i, "enabled", 0, 1, 0)
         params:set_action("enabled" .. i, function(x)
             steps[i].enabled = (x == 1)
@@ -585,7 +561,6 @@ function tick()
     else
         stop()
     end
-    -- playing_step_led_brightness = 15
     screen_dirty = true
     grid_dirty = true
 end
@@ -757,8 +732,8 @@ function redraw()
     screen.font_face(1)
     screen.font_size(8)
 
-    local screenWidth = 128 -- Example: Change this to your actual screen width
-    local screenHeight = 64 -- Example: Change this to your actual screen height
+    local screenWidth = 128
+    local screenHeight = 64
 
     pages:redraw()
 
