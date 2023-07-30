@@ -127,9 +127,9 @@ function init()
     init_params()
 
     params:bang()
-    params:set("enabled32", 1)
-    engine.setSample(sample_path .. "delar/piano1.wav")
-    is_playing = true
+    -- params:set("enabled1", 1)
+    -- engine.setSample(sample_path .. "delar/piano1.wav")
+    -- is_playing = true
     -- engine.set_num_slices(max_num_steps)
 
     screen_dirty = true

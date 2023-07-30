@@ -128,6 +128,7 @@ DelarSequencer {
 		numOfSlices = 128;
 		slices = Array.series(numOfSlices, 0, ((1.0 - 0.0) / (numOfSlices - 1)));
 		shortestFrameDuration = 1000;
+		activeSlices = [0];
 
 		// samplePlayer values
 		playbackRate = 1.0;
