@@ -19,6 +19,7 @@ num_synth_params = 12
 selected_screen_param = 1
 num_screen_params = 11
 rotations = {}
+duration = 0
 
 p_filter = {
     cutoff = {
@@ -128,8 +129,8 @@ function init()
 
     params:bang()
     params:set("enabled1", 1)
-    -- engine.setSample(sample_path .. "delar/piano1.wav")
-    -- is_playing = true
+    engine.setSample(sample_path .. "delar/piano1.wav")
+    is_playing = true
     -- engine.set_num_slices(max_num_steps)
 
     screen_dirty = true
@@ -141,7 +142,6 @@ function init()
     playing_step_led_clock = clock.run(playing_step_led_clock)
     playing_step_screen_clock = clock.run(playing_step_screen_clock)
     rotation_clock = clock.run(rotation_clock)
-
 end
 
 function init_filter_params()
@@ -536,6 +536,9 @@ function osc_in(path, args, from)
         playing_step = args[1] + 1 -- lua is 1-indexed
         -- print("playing step: " .. playing_step)
         tick()
+    elseif path == "/duration" then
+        -- print("received duration: " .. args[1])
+        duration = args[1]
     elseif path == "/x" then
         -- step = args[1]
     else
@@ -1149,6 +1152,11 @@ function rotation_clock()
             table.remove(rotations, 1)
         end
     end
+end
+
+function duration_clock()
+    clock.sleep(duration)
+    print("waited duration: " .. duration)
 end
 
 function cleanup()
