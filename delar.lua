@@ -654,7 +654,7 @@ function enc(n, d)
                     util.clamp(params:get(p_sampler.length.name .. selected_step) + d / 100, -1, 1))
             elseif selected_screen_param == 4 then
                 params:set(p_sampler.level.name .. selected_step,
-                    util.clamp(params:get(p_sampler.level.name .. selected_step) + d / 10, 0, 1))
+                    util.clamp(params:get(p_sampler.level.name .. selected_step) + d / 100, 0, 1))
             elseif selected_screen_param == 5 then
                 params:set(p_sampler.playback_rate.name .. selected_step,
                     util.clamp(params:get(p_sampler.playback_rate.name .. selected_step) + d, -2, 3))
