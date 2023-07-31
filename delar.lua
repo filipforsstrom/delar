@@ -882,7 +882,14 @@ function redraw()
         screen.move(90, 25)
         screen.text_right("rLenQ:")
         screen.move(95, 25)
-        screen.text(params:get(p_sampler.rand_length_unquantized.name .. selected_step))
+        local rand_length_unquantized = params:get(p_sampler.rand_length_unquantized.name .. selected_step)
+        if rand_length_unquantized <= 0 then
+            screen.text("f")
+        elseif rand_length_unquantized >= 1 then
+            screen.text("t")
+        else
+            screen.text(rand_length_unquantized)
+        end
 
         screen.level(selected_screen_param == 9 and 15 or 2)
         screen.move(90, 35)
@@ -900,7 +907,14 @@ function redraw()
         screen.move(90, 55)
         screen.text_right("loop:")
         screen.move(95, 55)
-        screen.text(params:get(p_sampler.loop.name .. selected_step))
+        local loop = params:get(p_sampler.loop.name .. selected_step)
+        if loop <= 0 then
+            screen.text("f")
+        elseif loop >= 1 then
+            screen.text("t")
+        else
+            screen.text(loop)
+        end
 
     elseif pages.index == 3 then
         -- position
