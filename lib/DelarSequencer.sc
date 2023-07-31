@@ -176,29 +176,32 @@ DelarSequencer {
 
 		// random length
 		if (randStartPosition > 0, {
-			rand = rrand((randStartPosition * -1) * 0.001, randStartPosition * 0.001);
+			rand = rrand((randStartPosition * -1), randStartPosition);
 			startSlice = startSlice + rand;
-			startSlice.max(0).min(1);
+			startSlice = startSlice.max(0).min(slices[slices.size - 2]);
 
 			if (randEndPosition, {
-				rand = rrand((randStartPosition * -1) * 0.001, randStartPosition * 0.001);
+				rand = rrand((randStartPosition * -1) * 0.1, randStartPosition * 0.1);
 			});
 			endSlice = endSlice + rand;
-			endSlice.max(0).min(1);
+			endSlice = endSlice.max(slices[1]).min(1);
+			// [startSlice, endSlice].postln;
 		});
 
 		// change slice length
 		if (length > 0, {
-			sliceLength = length.linlin(0, 100, endSlice, 1);
+			sliceLength = length.linlin(0, 1, endSlice, 1);
 			endSlice = sliceLength;
 		}, {
-			sliceLength = length.linlin(-100, 0, startSlice, endSlice);
+			sliceLength = length.linlin(-1, 0, startSlice, endSlice);
 			endSlice = sliceLength;
 		});
 
 		startFrame = (endFrame * startSlice).max(0);
 		endFrame = (endFrame * endSlice).max(startFrame + shortestFrameDuration).min(buffer.numFrames);
 		duration = abs((endFrame - startFrame) / (server.sampleRate * playbackRate));
+
+		// duration is fixed even if playback rate changes
 		if (fixedDuration, {
 			duration = duration * playbackRate;
 		});
@@ -282,7 +285,7 @@ DelarSequencer {
 		randFreq = rFreq;
 		randStartPosition = rStartPos;
 		randEndPosition = rEndPos;
-		randPanAmount = (rPan * 0.01).max(0).min(1.0);
+		randPanAmount = rPan;
 		release = rel;
 	}
 

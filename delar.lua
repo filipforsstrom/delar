@@ -316,8 +316,8 @@ function init_params()
     }
     rand_length_amount = controlspec.def {
         min = 0.0,
-        max = 100.0,
-        step = 0.01,
+        max = 1.0,
+        step = 0.001,
         default = p_sampler.rand_length_amount.default,
         quantum = 0.002
     }
@@ -330,7 +330,7 @@ function init_params()
     }
     rand_pan_amount = controlspec.def {
         min = 0.0,
-        max = 100.0,
+        max = 1.0,
         step = 0.01,
         default = p_sampler.rand_pan_amount.default,
         quantum = 0.002
@@ -651,7 +651,7 @@ function enc(n, d)
                     util.clamp(params:get(p_sampler.attack.name .. selected_step) + d / 100, 0.01, 1))
             elseif selected_screen_param == 3 then
                 params:set(p_sampler.length.name .. selected_step,
-                    util.clamp(params:get(p_sampler.length.name .. selected_step) + d / 10, -100, 100))
+                    util.clamp(params:get(p_sampler.length.name .. selected_step) + d / 100, -1, 1))
             elseif selected_screen_param == 4 then
                 params:set(p_sampler.level.name .. selected_step,
                     util.clamp(params:get(p_sampler.level.name .. selected_step) + d / 10, 0, 1))
@@ -663,13 +663,13 @@ function enc(n, d)
                     util.clamp(params:get(p_sampler.rand_freq.name .. selected_step) + d / 10, 0, 100))
             elseif selected_screen_param == 7 then
                 params:set(p_sampler.rand_length_amount.name .. selected_step,
-                    util.clamp(params:get(p_sampler.rand_length_amount.name .. selected_step) + d / 10, 0, 100))
+                    util.clamp(params:get(p_sampler.rand_length_amount.name .. selected_step) + d / 1000, 0, 1))
             elseif selected_screen_param == 8 then
                 params:set(p_sampler.rand_length_unquantized.name .. selected_step, util.clamp(
                     params:get(p_sampler.rand_length_unquantized.name .. selected_step) + d / 100, 0, 1))
             elseif selected_screen_param == 9 then
                 params:set(p_sampler.rand_pan_amount.name .. selected_step,
-                    util.clamp(params:get(p_sampler.rand_pan_amount.name .. selected_step) + d / 10, 0, 100))
+                    util.clamp(params:get(p_sampler.rand_pan_amount.name .. selected_step) + d / 100, 0, 1))
             elseif selected_screen_param == 10 then
                 params:set(p_sampler.release.name .. selected_step,
                     util.clamp(params:get(p_sampler.release.name .. selected_step) + d / 100, 0.01, 1))
