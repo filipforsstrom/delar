@@ -760,8 +760,14 @@ function redraw()
     pages:redraw()
 
     if pages.index == 1 then
+        local pattern = params:get("selected_pattern")
         local selected_step = params:get("selected_step")
         local playing_step = playing_step
+
+        -- pattern
+        screen.level(2)
+        screen.move(screenWidth / 2, 5)
+        screen.text_center("pattern " .. pattern)
 
         -- Determine the size of each square on the x-axis
         local stepSizeX = 6
