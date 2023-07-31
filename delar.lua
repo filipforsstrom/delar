@@ -5,6 +5,7 @@ local pages
 g = grid.connect()
 leds = {}
 keys_counter = {}
+alt_key = false
 
 sample_path = paths.home .. "/dust/audio/"
 is_playing = false
@@ -492,6 +493,12 @@ function params_not_default(step)
 end
 
 function key(n, z)
+    if n == 1 and z == 1 then
+        alt_key = true
+    else
+        alt_key = false
+    end
+
     if n == 2 and z == 1 then
         if is_playing then
             stop()
@@ -656,7 +663,11 @@ function enc(n, d)
             params:set("rotation", util.clamp(params:get("rotation") + d, -1, 1))
         end
         if n == 3 then
-            params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
+            if alt_key then
+                params:set("selected_pattern", util.clamp(params:get("selected_pattern") + d, 1, max_num_patterns))
+            else
+                params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
+            end
         end
     end
 
