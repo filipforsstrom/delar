@@ -206,9 +206,8 @@ DelarSequencer {
 			duration = duration * playbackRate;
 		});
 
-		["start", "end", "playback rate", "duration"].postln;
-		[startFrame, endFrame, playbackRate, duration].postln;
-		["step:" + currentStep, "slice:" + activeSlices[currentStep]].postln;
+		["slice: " ++ activeSlices[currentStep], "start: " ++ startFrame, "end: " ++ endFrame, "rate: " ++ playbackRate, "dur: " ++ duration].postln;
+		// ["step:" + currentStep].postln;
 
 		samplePlayerArgs = [
 			attack: attack,
@@ -228,6 +227,7 @@ DelarSequencer {
 		this.setFilterParam(\duration, duration);
 		this.setFilterParam(\t_gate, 1);
 		osc.sendMsg("/step", activeSlices[currentStep]);
+		osc.sendMsg("/duration", duration);
 
 		this.setCurrentStep(currentStep + 1);
 
