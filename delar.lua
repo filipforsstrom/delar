@@ -22,6 +22,7 @@ selected_screen_param = 1
 num_screen_params = 11
 rotations = {}
 duration = 0
+patterns = {}
 
 p_filter = {
     cutoff = {
@@ -106,6 +107,20 @@ function init()
     pages = ui.Pages.new(1, 3)
     -- pages:set_index_delta(1)
 
+    for p = 1, max_num_patterns do
+        patterns[p] = {}
+        patterns[p].steps = {} -- initialize the steps field
+        for s = 1, max_num_steps do
+            patterns[p].steps[s] = {
+                enabled = false,
+                altered = false
+            }
+            for _, param in pairs(p_sampler) do
+                patterns[p].steps[s][param.name] = param.default
+            end
+        end
+    end
+
     for i = 1, max_num_steps do
         steps[i] = {
             enabled = false,
@@ -131,6 +146,13 @@ function init()
 
     params:bang()
     params:set("p1s1enabled", 1)
+    params:set("p2s1enabled", 1)
+    params:set("p3s1enabled", 1)
+    params:set("p4s1enabled", 1)
+    params:set("p5s1enabled", 1)
+    params:set("p6s1enabled", 1)
+    params:set("p7s1enabled", 1)
+    params:set("p8s1enabled", 1)
     engine.setSample(sample_path .. "delar/piano1.wav")
     is_playing = true
     -- engine.set_num_slices(max_num_steps)
@@ -257,6 +279,9 @@ function init_params()
     end)
     params:hide("num_steps")
     params:add_number("selected_pattern", "pattern", 1, max_num_patterns, 1)
+    params:set_action("selected_pattern", function(x)
+        sequence = get_active_steps(patterns[x].steps)
+    end)
     params:hide("selected_pattern")
     params:add_number("selected_step", "step", 1, max_num_steps, 1)
     params:set_action("selected_step", function(x)
@@ -383,57 +408,71 @@ function init_params()
             params:add_number("p" .. i .. "s" .. j .. "enabled", "enabled", 0, 1, 0)
             params:set_action("p" .. i .. "s" .. j .. "enabled", function(x)
                 steps[j].enabled = (x == 1)
+                patterns[i].steps[j].enabled = (x == 1)
+                sequence = get_active_steps(patterns[params:get("selected_pattern")].steps)
             end)
             params:add_number("p" .. i .. "s" .. j .. "altered", "altered", 0, 1, 0)
             params:set_action("p" .. i .. "s" .. j .. "altered", function(x)
                 -- print("altered" .. i .. " changed to " .. x)
                 if params_not_default(j) then
                     steps[j].altered = true
+                    patterns[i].steps[j].altered = true
                 else
                     params:set("p" .. i .. "s" .. j .. "altered", 0)
                     steps[j].altered = false
+                    patterns[i].steps[j].altered = false
                 end
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.attack.name, "attack", attack)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.attack.name, function(x)
+                patterns[i].steps[j].attack = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.length.name, "length", length)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.length.name, function(x)
+                patterns[i].steps[j].length = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.level.name, "level", level)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.level.name, function(x)
+                patterns[i].steps[j].level = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.loop.name, "loop", loop)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.loop.name, function(x)
+                patterns[i].steps[j].loop = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.rand_freq.name, "rand freq", rand_freq)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.rand_freq.name, function(x)
+                patterns[i].steps[j].rand_freq = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.rand_length_amount.name, "rand length",
                 rand_length_amount)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.rand_length_amount.name, function(x)
+                patterns[i].steps[j].rand_length_amount = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.rand_length_unquantized.name, "unquantize rand length",
                 rand_length_unquantized)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.rand_length_unquantized.name, function(x)
+                patterns[i].steps[j].rand_length_unquantized = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.rand_pan_amount.name, "rand pan", rand_pan_amount)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.rand_pan_amount.name, function(x)
+                patterns[i].steps[j].rand_pan_amount = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_number("p" .. i .. "s" .. j .. p_sampler.playback_rate.name, "playback rate", -3, 4, 0)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.playback_rate.name, function(x)
+                patterns[i].steps[j].playback_rate = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.release.name, "release", release)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.release.name, function(x)
+                patterns[i].steps[j].release = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
         end
@@ -572,9 +611,6 @@ end
 osc.event = osc_in
 
 function tick()
-    sequence = get_active_steps(steps)
-    -- playing_step = sequence_position
-
     sequence_position = (sequence_position + 1)
     if sequence_position > #sequence then
         sequence_position = 1
@@ -590,7 +626,6 @@ function tick()
 end
 
 function play()
-    sequence = get_active_steps(steps)
     sequence_position = 1
     send_next_step(sequence[sequence_position])
     engine.play()
@@ -767,12 +802,13 @@ function redraw()
 
     local screenWidth = 128
     local screenHeight = 64
+    local pattern = params:get("selected_pattern")
+    local selected_step = params:get("selected_step")
 
     pages:redraw()
 
     if pages.index == 1 then
-        local pattern = params:get("selected_pattern")
-        local selected_step = params:get("selected_step")
+
         local playing_step = playing_step
 
         -- pattern
@@ -810,7 +846,7 @@ function redraw()
                 local stepX = startX + col * stepSizeX
                 local stepY = startY + row * stepSizeY
 
-                if steps[(row - 1) * numColumns + col].enabled then
+                if patterns[pattern].steps[(row - 1) * numColumns + col].enabled then
                     screen.rect(stepX, stepY, stepSizeX, stepSizeY)
                     screen.level(5)
                     screen.stroke()
@@ -824,7 +860,7 @@ function redraw()
                 local stepX = startX + col * stepSizeX
                 local stepY = startY + row * stepSizeY
 
-                if steps[(row - 1) * numColumns + col].altered then
+                if patterns[pattern].steps[(row - 1) * numColumns + col].altered then
                     screen.rect(stepX + 1, stepY + 1, stepSizeX - 2, stepSizeY - 2)
                     screen.level(15)
                     screen.stroke()
@@ -873,8 +909,6 @@ function redraw()
         end
 
         -- params
-        local selected_step = params:get("selected_step")
-        local pattern = params:get("selected_pattern")
         local pattern_step = "p" .. pattern .. "s" .. selected_step
 
         screen.level(selected_screen_param == 1 and 15 or 2)
@@ -1135,14 +1169,15 @@ function grid_redraw_clock()
 end
 
 function grid_redraw()
+    local pattern = params:get("selected_pattern")
     g:all(0)
 
-    for i = 1, #steps do
-        if steps[i].altered then
+    for i = 1, #patterns[pattern].steps do
+        if patterns[pattern].steps[i].altered then
             g:led(leds[i].x, leds[i].y, 8)
         end
 
-        if steps[i].enabled then
+        if patterns[pattern].steps[i].enabled then
             g:led(leds[i].x, leds[i].y, 15)
         end
     end
