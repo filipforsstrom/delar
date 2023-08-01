@@ -309,8 +309,8 @@ function init_params()
         quantum = 0.002 -- each delta will change raw value by this much
     }
     length = controlspec.def {
-        min = -100.0,
-        max = 100.0,
+        min = -1.0,
+        max = 1.0,
         step = 0.01,
         default = p_sampler.length.default,
         quantum = 0.002
