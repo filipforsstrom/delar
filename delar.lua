@@ -295,7 +295,9 @@ function init_params()
     params:add_number("rotation", "rotation", -1, 1, 0)
     params:set_action("rotation", function(x)
         if x > 0 or x < 0 then
-            table.insert(rotations, x)
+            if #rotations < 1 then
+                table.insert(rotations, x)
+            end
         end
         params:set("rotation", 0)
     end)
@@ -1219,7 +1221,7 @@ end
 
 function rotation_clock()
     while true do
-        clock.sync(1 / 10)
+        clock.sync(1 / 8)
         if #rotations > 0 then
             rotate(rotations[1])
             table.remove(rotations, 1)
