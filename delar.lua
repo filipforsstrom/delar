@@ -297,6 +297,7 @@ function init_params()
         if x > 0 or x < 0 then
             if #rotations < 1 then
                 table.insert(rotations, x)
+                params:set("selected_step", params:get("selected_step") + x)
             end
         end
         params:set("rotation", 0)
