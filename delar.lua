@@ -166,7 +166,7 @@ function init()
     playing_step_led_clock = clock.run(playing_step_led_clock)
     playing_step_screen_clock = clock.run(playing_step_screen_clock)
     rotation_list_clock = clock.run(rotation_list_clock)
-    rotation_clock = clock.run(rotation_clock)
+    -- rotation_clock = clock.run(rotation_clock)
 end
 
 function init_filter_params()
