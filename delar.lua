@@ -165,6 +165,7 @@ function init()
     grid_clock = clock.run(grid_redraw_clock)
     playing_step_led_clock = clock.run(playing_step_led_clock)
     playing_step_screen_clock = clock.run(playing_step_screen_clock)
+    rotation_list_clock = clock.run(rotation_list_clock)
     rotation_clock = clock.run(rotation_clock)
 end
 
@@ -297,7 +298,7 @@ function init_params()
         if x > 0 or x < 0 then
             if #rotations < 1 then
                 table.insert(rotations, x)
-                params:set("selected_step", params:get("selected_step") + x)
+                -- params:set("selected_step", params:get("selected_step") + x)
             end
         end
         params:set("rotation", 0)
@@ -1220,12 +1221,21 @@ function playing_step_screen_clock()
     end
 end
 
-function rotation_clock()
+function rotation_list_clock()
     while true do
         clock.sync(1 / 8)
         if #rotations > 0 then
             rotate(rotations[1])
             table.remove(rotations, 1)
+        end
+    end
+end
+
+function rotation_clock()
+    while true do
+        clock.sync(1 / 2)
+        if is_playing then
+            params:set("rotation", 1)
         end
     end
 end
