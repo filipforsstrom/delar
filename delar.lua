@@ -168,7 +168,7 @@ function init()
     rotation_list_clock = clock.run(rotation_list_clock)
 
     -- timers
-    rotation_timer = metro.init(check_if_rotation, 0.1, -1)
+    rotation_timer = metro.init(check_rotations, 0.1, -1)
     rotation_timer:start()
 end
 
@@ -486,8 +486,7 @@ function init_params()
     end
 end
 
-function check_if_rotation()
-    print("rotation timer")
+function check_rotations()
     if #rotations > 0 then
         rotate(rotations[1])
         table.remove(rotations, 1)
