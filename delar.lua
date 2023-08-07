@@ -166,7 +166,10 @@ function init()
     playing_step_led_clock = clock.run(playing_step_led_clock)
     playing_step_screen_clock = clock.run(playing_step_screen_clock)
     rotation_list_clock = clock.run(rotation_list_clock)
-    -- rotation_clock = clock.run(rotation_clock)
+
+    -- timers
+    rotation_timer = metro.init(check_if_rotation, 0.1, -1)
+    rotation_timer:start()
 end
 
 function init_filter_params()
@@ -480,9 +483,15 @@ function init_params()
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
         end
-
     end
+end
 
+function check_if_rotation()
+    print("rotation timer")
+    if #rotations > 0 then
+        rotate(rotations[1])
+        table.remove(rotations, 1)
+    end
 end
 
 function rotate(x)
@@ -1227,15 +1236,6 @@ function rotation_list_clock()
         if #rotations > 0 then
             rotate(rotations[1])
             table.remove(rotations, 1)
-        end
-    end
-end
-
-function rotation_clock()
-    while true do
-        clock.sync(1 / 2)
-        if is_playing then
-            params:set("rotation", 1)
         end
     end
 end
