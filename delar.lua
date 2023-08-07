@@ -165,7 +165,6 @@ function init()
     grid_clock = clock.run(grid_redraw_clock)
     playing_step_led_clock = clock.run(playing_step_led_clock)
     playing_step_screen_clock = clock.run(playing_step_screen_clock)
-    rotation_list_clock = clock.run(rotation_list_clock)
 
     -- timers
     rotation_timer = metro.init(check_rotations, 0.1, -1)
@@ -1226,16 +1225,6 @@ function playing_step_screen_clock()
             direction = 1
         end
         screen_dirty = true
-    end
-end
-
-function rotation_list_clock()
-    while true do
-        clock.sync(1 / 8)
-        if #rotations > 0 then
-            rotate(rotations[1])
-            table.remove(rotations, 1)
-        end
     end
 end
 
