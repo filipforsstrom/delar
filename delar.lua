@@ -167,7 +167,7 @@ function init()
     playing_step_screen_clock = clock.run(playing_step_screen_clock)
 
     -- timers
-    rotation_timer = metro.init(check_rotations, 0.1, -1)
+    rotation_timer = metro.init(check_rotations, 0.04, -1)
     rotation_timer:start()
 end
 
