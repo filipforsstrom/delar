@@ -11,6 +11,7 @@ DelarSequencer {
 
 	var samplePlayer;
 	var filter;
+	var filterInput;
 	var <filterParams;
 	var delay;
 
@@ -38,7 +39,7 @@ DelarSequencer {
 	var <>randEndPosition;
 	var <>randPanAmount;
 	var <>level;
-	var <>busOutput;
+	var <>samplePlayerOutput;
 	var <>fixedDuration;
 
 	*new { arg server, targetNode, addAction, doneLoadingCallback;
@@ -71,8 +72,10 @@ DelarSequencer {
 
 		server.bind({ delay = Synth.new(\Delay_stereo) });*/
 
-		SynthDef.new(\Filter_stereo, {
-			var sig = In.ar(\in.ir(10), 2);
+		filterInput = Bus.audio(server, 2);
+
+		SynthDef.new(\Filter, {
+			var sig = In.ar(\in.ir(filterInput), 2);
 			var duration = \duration.kr;
 			var attack = \attack.kr(0.01).min(duration);
 			var release = \release.kr(0.01).min(duration - attack);
@@ -86,7 +89,7 @@ DelarSequencer {
 			Out.ar(\out.ir(0), filter * \level.kr(1.0));
 		}).send(server);
 
-		server.bind({ filter = Synth.new(\Filter_stereo) });
+		server.bind({ filter = Synth.new(\Filter) });
 
 		SynthDef.new(\SamplePlayer_mono, {
 			var buf = \buffer.ir;
@@ -98,10 +101,10 @@ DelarSequencer {
 			var sustain = (duration - (attack + release)).max(0);
 			var env = EnvGen.ar(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction:2);
 			var phase = Phasor.ar(0, rate, \startFrame.ir, \endFrame.ir);
-			var snd = BufRd.ar(2, buf, phase);
+			var snd = BufRd.ar(1, buf, phase);
 			snd = snd * env;
 			snd = Pan2.ar(snd, rand * \randPanAmount.kr(0));
-			Out.ar(\out.kr(10), (snd * \level.kr(0.9)).dup);
+			Out.ar(\out.kr(filterInput), (snd * \level.kr(0.9)).dup);
 		}).send(server);
 
 		SynthDef.new(\SamplePlayer_stereo, {
@@ -117,7 +120,7 @@ DelarSequencer {
 			var snd = BufRd.ar(2, buf, phase);
 			snd = snd * env;
 			snd = Balance2.ar(snd[0], snd[1], rand * \randPanAmount.kr(0));
-			Out.ar(\out.ir(10), snd * \level.ir(0.9));
+			Out.ar(\out.ir(filterInput), snd * \level.ir(0.9));
 		}).send(server);
 
 		osc = NetAddr.new("127.0.0.1", 10111);
@@ -130,7 +133,7 @@ DelarSequencer {
 		shortestFrameDuration = 1000;
 		activeSlices = [0];
 
-		// samplePlayer values
+		// samplePlayer default values
 		playbackRate = 1.0;
 		startPosition = 0.0;
 		endPosition = 1.0;
@@ -142,7 +145,6 @@ DelarSequencer {
 		randEndPosition = false;
 		randPanAmount = 0;
 		level = 0.5;
-		busOutput = 10;
 		fixedDuration = false;
 	}
 
@@ -220,7 +222,7 @@ DelarSequencer {
 			randPanAmount: randPanAmount,
 			release: release,
 			startFrame: startFrame,
-			out: busOutput,
+			out: filterInput,
 		];
 
 		server.bind({ samplePlayer = Synth.new(defSymbol, samplePlayerArgs, targetNode, addAction) });
@@ -253,11 +255,17 @@ DelarSequencer {
 	}
 
 	setSample { arg path;
-		this.stop();
+		// this.stop();
+		this.freeSample();
 		buffer.free;
 		buffer = Buffer.read(server, path, action: {
 			("Sample loaded.").postln;
-			this.play();
+			if (buffer.numFrames < (shortestFrameDuration * numOfSlices), {
+				("The sample is too short.").postln;
+				buffer.free;
+			}, {
+				this.play();
+			});
 		});
 	}
 
