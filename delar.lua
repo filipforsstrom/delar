@@ -165,6 +165,7 @@ function init()
     grid_clock = clock.run(grid_redraw_clock)
     playing_step_led_clock = clock.run(playing_step_led_clock)
     playing_step_screen_clock = clock.run(playing_step_screen_clock)
+    rotation_clock = clock.run(rotation_clock)
 
     -- timers
     rotation_timer = metro.init(check_rotations, 0.04, -1)
@@ -271,6 +272,20 @@ function init_filter_params()
 end
 
 function init_params()
+    -- params:add_group("rotation", 2)
+    params:add_number("rotation", "rotation", -1, 1, 0)
+    params:set_action("rotation", function(x)
+        if x > 0 or x < 0 then
+            if #rotations < 1 then
+                table.insert(rotations, x)
+                -- params:set("selected_step", params:get("selected_step") + x)
+            end
+        end
+        params:set("rotation", 0)
+    end)
+    -- params:hide("rotation")
+    params:add_number("rotate", "rotate", 0, 1, 0)
+
     params:add_file("sample", "sample", sample_path)
     params:set_action("sample", function(x)
         engine.setSample(x)
@@ -295,17 +310,6 @@ function init_params()
         screen_dirty = true
     end)
     params:hide("selected_step")
-    params:add_number("rotation", "rotation", -1, 1, 0)
-    params:set_action("rotation", function(x)
-        if x > 0 or x < 0 then
-            if #rotations < 1 then
-                table.insert(rotations, x)
-                -- params:set("selected_step", params:get("selected_step") + x)
-            end
-        end
-        params:set("rotation", 0)
-    end)
-    params:hide("rotation")
 
     attack = controlspec.def {
         min = 0.01, -- the minimum value
@@ -551,9 +555,9 @@ function key(n, z)
 
     if n == 2 and z == 1 then
         if is_playing then
-            stop()
+            stop_engine()
         else
-            play()
+            play_engine()
         end
     end
 
@@ -630,21 +634,22 @@ function tick()
     if #sequence > 0 then
         send_next_step(sequence[sequence_position])
     else
-        stop()
+        stop_engine()
     end
     screen_dirty = true
     grid_dirty = true
 end
 
-function play()
+function play_engine()
     sequence_position = 1
     send_next_step(sequence[sequence_position])
     engine.play()
     is_playing = true
 end
 
-function stop()
+function stop_engine()
     engine.stop()
+    params:set("rotate", 0)
     is_playing = false
     playing_step = 0
 end
@@ -1225,6 +1230,15 @@ function playing_step_screen_clock()
             direction = 1
         end
         screen_dirty = true
+    end
+end
+
+function rotation_clock()
+    while true do
+        clock.sync(1 / 0.5)
+        if params:get("rotate") == 1 then
+            params:set("rotation", 1)
+        end
     end
 end
 
