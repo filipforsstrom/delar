@@ -9,14 +9,14 @@ alt_key = false
 
 sample_path = paths.home .. "/dust/audio/"
 is_playing = false
-playing_step = 0
-playing_step_led_brightness = 15
-playing_step_screen_brightness = 15
+playing_slice = 0
+playing_slice_led_brightness = 15
+playing_slice_screen_brightness = 15
 sequence = {}
 sequence_position = 1
-steps = {}
+slices = {}
 max_num_patterns = 8
-max_num_steps = 256
+max_num_slices = 256
 num_synth_params = 12
 selected_screen_param = 1
 num_screen_params = 11
@@ -109,20 +109,20 @@ function init()
 
     for p = 1, max_num_patterns do
         patterns[p] = {}
-        patterns[p].steps = {} -- initialize the steps field
-        for s = 1, max_num_steps do
-            patterns[p].steps[s] = {
+        patterns[p].slices = {} -- initialize the slices field
+        for s = 1, max_num_slices do
+            patterns[p].slices[s] = {
                 enabled = false,
                 altered = false
             }
             for _, param in pairs(p_sampler) do
-                patterns[p].steps[s][param.name] = param.default
+                patterns[p].slices[s][param.name] = param.default
             end
         end
     end
 
-    for i = 1, max_num_steps do
-        steps[i] = {
+    for i = 1, max_num_slices do
+        slices[i] = {
             enabled = false,
             altered = false
         }
@@ -155,7 +155,7 @@ function init()
     params:set("p8s1enabled", 1)
     engine.setSample(sample_path .. "delar/piano1.wav")
     is_playing = true
-    -- engine.set_num_slices(max_num_steps)
+    -- engine.set_num_slices(max_num_slices)
 
     screen_dirty = true
     grid_dirty = true
@@ -163,8 +163,8 @@ function init()
     -- clocks
     screen_clock = clock.run(screen_redraw_clock)
     grid_clock = clock.run(grid_redraw_clock)
-    playing_step_led_clock = clock.run(playing_step_led_clock)
-    playing_step_screen_clock = clock.run(playing_step_screen_clock)
+    playing_slice_led_clock = clock.run(playing_slice_led_clock)
+    playing_slice_screen_clock = clock.run(playing_slice_screen_clock)
     rotation_clock = clock.run(rotation_clock)
 
     -- timers
@@ -278,7 +278,7 @@ function init_params()
         if x > 0 or x < 0 then
             if #rotations < 1 then
                 table.insert(rotations, x)
-                -- params:set("selected_step", params:get("selected_step") + x)
+                -- params:set("selected_slice", params:get("selected_slice") + x)
             end
         end
         params:set("rotation", 0)
@@ -291,25 +291,25 @@ function init_params()
         engine.setSample(x)
         is_playing = true
     end)
-    params:add_number("num_steps", "num steps", 1, max_num_steps, 128)
-    params:set_action("num_steps", function(x)
+    params:add_number("num_slices", "num slices", 1, max_num_slices, 128)
+    params:set_action("num_slices", function(x)
         engine.set_num_slices(x)
     end)
-    params:hide("num_steps")
+    params:hide("num_slices")
     params:add_number("selected_pattern", "pattern", 1, max_num_patterns, 1)
     params:set_action("selected_pattern", function(x)
-        sequence = get_active_steps(patterns[x].steps)
+        sequence = get_active_slices(patterns[x].slices)
     end)
     params:hide("selected_pattern")
-    params:add_number("selected_step", "step", 1, max_num_steps, 1)
-    params:set_action("selected_step", function(x)
-        if x > params:get("num_steps") then
-            params:set("selected_step", params:get("num_steps"))
+    params:add_number("selected_slice", "slice", 1, max_num_slices, 1)
+    params:set_action("selected_slice", function(x)
+        if x > params:get("num_slices") then
+            params:set("selected_slice", params:get("num_slices"))
         end
         grid_dirty = true
         screen_dirty = true
     end)
-    params:hide("selected_step")
+    params:hide("selected_slice")
 
     attack = controlspec.def {
         min = 0.01, -- the minimum value
@@ -412,77 +412,77 @@ function init_params()
     params:hide(p_sampler.release.name)
 
     for i = 1, max_num_patterns do
-        for j = 1, max_num_steps do
-            params:add_group("pattern " .. i .. " step " .. j, num_synth_params)
-            -- params:hide("pattern " .. i .. " step " .. j)
+        for j = 1, max_num_slices do
+            params:add_group("pattern " .. i .. " slice " .. j, num_synth_params)
+            -- params:hide("pattern " .. i .. " slice " .. j)
             params:add_number("p" .. i .. "s" .. j .. "enabled", "enabled", 0, 1, 0)
             params:set_action("p" .. i .. "s" .. j .. "enabled", function(x)
-                steps[j].enabled = (x == 1)
-                patterns[i].steps[j].enabled = (x == 1)
-                sequence = get_active_steps(patterns[params:get("selected_pattern")].steps)
+                slices[j].enabled = (x == 1)
+                patterns[i].slices[j].enabled = (x == 1)
+                sequence = get_active_slices(patterns[params:get("selected_pattern")].slices)
             end)
             params:add_number("p" .. i .. "s" .. j .. "altered", "altered", 0, 1, 0)
             params:set_action("p" .. i .. "s" .. j .. "altered", function(x)
                 -- print("altered" .. i .. " changed to " .. x)
                 if params_not_default(j) then
-                    steps[j].altered = true
-                    patterns[i].steps[j].altered = true
+                    slices[j].altered = true
+                    patterns[i].slices[j].altered = true
                 else
                     params:set("p" .. i .. "s" .. j .. "altered", 0)
-                    steps[j].altered = false
-                    patterns[i].steps[j].altered = false
+                    slices[j].altered = false
+                    patterns[i].slices[j].altered = false
                 end
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.attack.name, "attack", attack)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.attack.name, function(x)
-                patterns[i].steps[j].attack = x
+                patterns[i].slices[j].attack = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.length.name, "length", length)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.length.name, function(x)
-                patterns[i].steps[j].length = x
+                patterns[i].slices[j].length = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.level.name, "level", level)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.level.name, function(x)
-                patterns[i].steps[j].level = x
+                patterns[i].slices[j].level = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.loop.name, "loop", loop)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.loop.name, function(x)
-                patterns[i].steps[j].loop = x
+                patterns[i].slices[j].loop = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.rand_freq.name, "rand freq", rand_freq)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.rand_freq.name, function(x)
-                patterns[i].steps[j].rand_freq = x
+                patterns[i].slices[j].rand_freq = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.rand_length_amount.name, "rand length",
                 rand_length_amount)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.rand_length_amount.name, function(x)
-                patterns[i].steps[j].rand_length_amount = x
+                patterns[i].slices[j].rand_length_amount = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.rand_length_unquantized.name, "unquantize rand length",
                 rand_length_unquantized)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.rand_length_unquantized.name, function(x)
-                patterns[i].steps[j].rand_length_unquantized = x
+                patterns[i].slices[j].rand_length_unquantized = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.rand_pan_amount.name, "rand pan", rand_pan_amount)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.rand_pan_amount.name, function(x)
-                patterns[i].steps[j].rand_pan_amount = x
+                patterns[i].slices[j].rand_pan_amount = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_number("p" .. i .. "s" .. j .. p_sampler.playback_rate.name, "playback rate", -3, 4, 0)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.playback_rate.name, function(x)
-                patterns[i].steps[j].playback_rate = x
+                patterns[i].slices[j].playback_rate = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
             params:add_control("p" .. i .. "s" .. j .. p_sampler.release.name, "release", release)
             params:set_action("p" .. i .. "s" .. j .. p_sampler.release.name, function(x)
-                patterns[i].steps[j].release = x
+                patterns[i].slices[j].release = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
         end
@@ -502,11 +502,11 @@ function rotate(x)
                               p_sampler.loop.name, p_sampler.playback_rate.name, p_sampler.rand_freq.name,
                               p_sampler.rand_length_amount.name, p_sampler.rand_length_unquantized.name,
                               p_sampler.rand_pan_amount.name, p_sampler.release.name}
-    local num_steps = params:get("num_steps")
+    local num_slices = params:get("num_slices")
 
     -- store all params in a table
     local all_params = {}
-    for i = 1, num_steps do
+    for i = 1, num_slices do
         all_params[i] = {}
         for _, param in ipairs(params_to_rotate) do
             all_params[i][param] = params:get("p" .. pattern .. "s" .. i .. param)
@@ -514,32 +514,32 @@ function rotate(x)
     end
 
     -- rotate the table
-    local rotate_steps = x % num_steps -- calculate the number of steps to rotate
-    if rotate_steps ~= 0 then -- only rotate if there are steps to rotate
-        if rotate_steps < 0 then -- rotate left
-            rotate_steps = rotate_steps + num_steps
+    local rotate_slices = x % num_slices -- calculate the number of slices to rotate
+    if rotate_slices ~= 0 then -- only rotate if there are slices to rotate
+        if rotate_slices < 0 then -- rotate left
+            rotate_slices = rotate_slices + num_slices
         end
-        for i = 1, rotate_steps do
-            table.insert(all_params, 1, table.remove(all_params, num_steps))
+        for i = 1, rotate_slices do
+            table.insert(all_params, 1, table.remove(all_params, num_slices))
         end
     end
 
     -- set all params to the new values
-    for i = 1, num_steps do
+    for i = 1, num_slices do
         for _, param in ipairs(params_to_rotate) do
             params:set("p" .. pattern .. "s" .. i .. param, all_params[i][param])
         end
     end
 end
 
-function params_not_default(step)
+function params_not_default(slice)
     local pattern = params:get("selected_pattern")
-    local pattern_step = "p" .. pattern .. "s" .. step
+    local pattern_slice = "p" .. pattern .. "s" .. slice
     local params_to_check = {p_sampler.attack, p_sampler.length, p_sampler.level, p_sampler.loop, p_sampler.rand_freq,
                              p_sampler.rand_length_amount, p_sampler.rand_length_unquantized, p_sampler.rand_pan_amount,
                              p_sampler.playback_rate, p_sampler.release}
     for _, param in ipairs(params_to_check) do
-        if params:get(pattern_step .. param.name) ~= param.default then
+        if params:get(pattern_slice .. param.name) ~= param.default then
             return true
         end
     end
@@ -562,21 +562,21 @@ function key(n, z)
     end
 
     if pages.index == 1 then
-        if n == 3 and z == 1 then -- toggle step enabled/disabled
-            local selected_step = params:get("selected_step")
+        if n == 3 and z == 1 then -- toggle slice enabled/disabled
+            local selected_slice = params:get("selected_slice")
             local pattern = params:get("selected_pattern")
-            local pattern_step = "p" .. pattern .. "s" .. selected_step
-            if params:get(pattern_step .. "enabled") == 1 then
-                params:set(pattern_step .. "enabled", 0)
+            local pattern_slice = "p" .. pattern .. "s" .. selected_slice
+            if params:get(pattern_slice .. "enabled") == 1 then
+                params:set(pattern_slice .. "enabled", 0)
             else
-                params:set(pattern_step .. "enabled", 1)
+                params:set(pattern_slice .. "enabled", 1)
             end
         end
     end
 
     if pages.index == 2 then
         if n == 3 and z == 1 then
-            set_all_params_default(params:get("selected_step"))
+            set_all_params_default(params:get("selected_slice"))
         end
     else
         if pages.index == 3 then
@@ -587,13 +587,13 @@ function key(n, z)
     end
 end
 
-function set_all_params_default(step)
-    local pattern_step = "p" .. params:get("selected_pattern") .. "s" .. step
+function set_all_params_default(slice)
+    local pattern_slice = "p" .. params:get("selected_pattern") .. "s" .. slice
     local params_to_set = {p_sampler.attack, p_sampler.length, p_sampler.level, p_sampler.loop, p_sampler.rand_freq,
                            p_sampler.rand_length_amount, p_sampler.rand_length_unquantized, p_sampler.rand_pan_amount,
                            p_sampler.playback_rate, p_sampler.release}
     for _, param in ipairs(params_to_set) do
-        params:set(pattern_step .. param.name, param.default)
+        params:set(pattern_slice .. param.name, param.default)
     end
 end
 
@@ -608,14 +608,14 @@ end
 
 function osc_in(path, args, from)
     if path == "/step" then
-        playing_step = args[1] + 1 -- lua is 1-indexed
-        -- print("playing step: " .. playing_step)
+        playing_slice = args[1] + 1 -- lua is 1-indexed
+        -- print("playing slice: " .. playing_slice)
         tick()
     elseif path == "/duration" then
         -- print("received duration: " .. args[1])
         duration = args[1]
     elseif path == "/x" then
-        -- step = args[1]
+        -- slice = args[1]
     else
         print(path)
         tab.print(args)
@@ -632,7 +632,7 @@ function tick()
     end
 
     if #sequence > 0 then
-        send_next_step(sequence[sequence_position])
+        send_next_slice(sequence[sequence_position])
     else
         stop_engine()
     end
@@ -642,7 +642,7 @@ end
 
 function play_engine()
     sequence_position = 1
-    send_next_step(sequence[sequence_position])
+    send_next_slice(sequence[sequence_position])
     engine.play()
     is_playing = true
 end
@@ -651,59 +651,59 @@ function stop_engine()
     engine.stop()
     params:set("rotate", 0)
     is_playing = false
-    playing_step = 0
+    playing_slice = 0
 end
 
-function get_active_steps(steps)
-    local active_steps = {}
-    for i = 1, #steps do
-        if steps[i].enabled then
-            table.insert(active_steps, i)
+function get_active_slices(slices)
+    local active_slices = {}
+    for i = 1, #slices do
+        if slices[i].enabled then
+            table.insert(active_slices, i)
         end
     end
-    return active_steps
+    return active_slices
 end
 
-function send_next_step(step)
+function send_next_slice(slice)
     local pattern = params:get("selected_pattern")
-    local pattern_step = "p" .. pattern .. "s" .. step
+    local pattern_slice = "p" .. pattern .. "s" .. slice
     local params_to_check = {p_sampler.attack.name, p_sampler.loop.name, p_sampler.length.name, p_sampler.level.name,
                              p_sampler.playback_rate.name, p_sampler.rand_freq.name, p_sampler.rand_length_amount.name,
                              p_sampler.rand_length_unquantized.name, p_sampler.rand_pan_amount.name,
                              p_sampler.release.name}
     local engine_params = {}
     for i, param in ipairs(params_to_check) do
-        local step_value = params:get(pattern_step .. param)
-        local range = params:get_range(pattern_step .. param)
+        local slice_value = params:get(pattern_slice .. param)
+        local range = params:get_range(pattern_slice .. param)
         local offset = params:get(param)
-        local offset_step_value = step_value + (offset / 100) * (range[2] - range[1])
+        local offset_slice_value = slice_value + (offset / 100) * (range[2] - range[1])
 
         if param == p_sampler.rand_length_unquantized.name or param == p_sampler.loop.name then
             -- If the parameter is rand_length_unquantized or loop,
-            -- randomly set the offset_step_value to either 0 or 1
+            -- randomly set the offset_slice_value to either 0 or 1
             -- unless it's already 0 or 1
-            offset_step_value = (offset_step_value == 0 or offset_step_value == 1) and offset_step_value or
-                                    (math.random() < offset_step_value and 1 or 0)
+            offset_slice_value = (offset_slice_value == 0 or offset_slice_value == 1) and offset_slice_value or
+                                    (math.random() < offset_slice_value and 1 or 0)
         end
 
-        local clamped_step_value = util.clamp(offset_step_value, range[1], range[2])
+        local clamped_slice_value = util.clamp(offset_slice_value, range[1], range[2])
 
-        -- print(param .. " step: " .. step_value)
+        -- print(param .. " slice: " .. slice_value)
         -- print(param .. " range: " .. range[1] .. " - " .. range[2])
         -- print(param .. " offset: " .. offset)
-        -- print(param .. " offset step: " .. offset_step_value)
-        -- print(param .. " clamped step: " .. clamped_step_value)
+        -- print(param .. " offset slice: " .. offset_slice_value)
+        -- print(param .. " clamped slice: " .. clamped_slice_value)
 
-        engine_params[i] = clamped_step_value
+        engine_params[i] = clamped_slice_value
     end
     -- tab.print(engine_params)
-    engine.set_all(step, table.unpack(engine_params))
+    engine.set_all(slice, table.unpack(engine_params))
 end
 
 function enc(n, d)
-    local selected_step = params:get("selected_step")
+    local selected_slice = params:get("selected_slice")
     local pattern = params:get("selected_pattern")
-    local pattern_step = "p" .. pattern .. "s" .. selected_step
+    local pattern_slice = "p" .. pattern .. "s" .. selected_slice
 
     if n == 1 then -- Page scroll
         pages:set_index_delta(util.clamp(d, -1, 1), false)
@@ -717,7 +717,7 @@ function enc(n, d)
             if alt_key then
                 params:set("selected_pattern", util.clamp(params:get("selected_pattern") + d, 1, max_num_patterns))
             else
-                params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
+                params:set("selected_slice", util.clamp(selected_slice + d, 1, params:get("num_slices")))
             end
         end
     end
@@ -729,37 +729,37 @@ function enc(n, d)
 
         if n == 3 then
             if selected_screen_param == 1 then
-                params:set("selected_step", util.clamp(selected_step + d, 1, params:get("num_steps")))
+                params:set("selected_slice", util.clamp(selected_slice + d, 1, params:get("num_slices")))
             elseif selected_screen_param == 2 then
-                params:set(pattern_step .. p_sampler.attack.name,
-                    util.clamp(params:get(pattern_step .. p_sampler.attack.name) + d / 100, 0.01, 1))
+                params:set(pattern_slice .. p_sampler.attack.name,
+                    util.clamp(params:get(pattern_slice .. p_sampler.attack.name) + d / 100, 0.01, 1))
             elseif selected_screen_param == 3 then
-                params:set(pattern_step .. p_sampler.length.name,
-                    util.clamp(params:get(pattern_step .. p_sampler.length.name) + d / 100, -1, 1))
+                params:set(pattern_slice .. p_sampler.length.name,
+                    util.clamp(params:get(pattern_slice .. p_sampler.length.name) + d / 100, -1, 1))
             elseif selected_screen_param == 4 then
-                params:set(pattern_step .. p_sampler.level.name,
-                    util.clamp(params:get(pattern_step .. p_sampler.level.name) + d / 100, 0, 1))
+                params:set(pattern_slice .. p_sampler.level.name,
+                    util.clamp(params:get(pattern_slice .. p_sampler.level.name) + d / 100, 0, 1))
             elseif selected_screen_param == 5 then
-                params:set(pattern_step .. p_sampler.playback_rate.name,
-                    util.clamp(params:get(pattern_step .. p_sampler.playback_rate.name) + d, -2, 3))
+                params:set(pattern_slice .. p_sampler.playback_rate.name,
+                    util.clamp(params:get(pattern_slice .. p_sampler.playback_rate.name) + d, -2, 3))
             elseif selected_screen_param == 6 then
-                params:set(pattern_step .. p_sampler.rand_freq.name,
-                    util.clamp(params:get(pattern_step .. p_sampler.rand_freq.name) + d / 10, 0, 100))
+                params:set(pattern_slice .. p_sampler.rand_freq.name,
+                    util.clamp(params:get(pattern_slice .. p_sampler.rand_freq.name) + d / 10, 0, 100))
             elseif selected_screen_param == 7 then
-                params:set(pattern_step .. p_sampler.rand_length_amount.name,
-                    util.clamp(params:get(pattern_step .. p_sampler.rand_length_amount.name) + d / 1000, 0, 1))
+                params:set(pattern_slice .. p_sampler.rand_length_amount.name,
+                    util.clamp(params:get(pattern_slice .. p_sampler.rand_length_amount.name) + d / 1000, 0, 1))
             elseif selected_screen_param == 8 then
-                params:set(pattern_step .. p_sampler.rand_length_unquantized.name, util.clamp(
-                    params:get(pattern_step .. p_sampler.rand_length_unquantized.name) + d / 100, 0, 1))
+                params:set(pattern_slice .. p_sampler.rand_length_unquantized.name, util.clamp(
+                    params:get(pattern_slice .. p_sampler.rand_length_unquantized.name) + d / 100, 0, 1))
             elseif selected_screen_param == 9 then
-                params:set(pattern_step .. p_sampler.rand_pan_amount.name,
-                    util.clamp(params:get(pattern_step .. p_sampler.rand_pan_amount.name) + d / 100, 0, 1))
+                params:set(pattern_slice .. p_sampler.rand_pan_amount.name,
+                    util.clamp(params:get(pattern_slice .. p_sampler.rand_pan_amount.name) + d / 100, 0, 1))
             elseif selected_screen_param == 10 then
-                params:set(pattern_step .. p_sampler.release.name,
-                    util.clamp(params:get(pattern_step .. p_sampler.release.name) + d / 100, 0.01, 1))
+                params:set(pattern_slice .. p_sampler.release.name,
+                    util.clamp(params:get(pattern_slice .. p_sampler.release.name) + d / 100, 0.01, 1))
             elseif selected_screen_param == 11 then
-                params:set(pattern_step .. p_sampler.loop.name,
-                    util.clamp(params:get(pattern_step .. p_sampler.loop.name) + d / 100, 0, 1))
+                params:set(pattern_slice .. p_sampler.loop.name,
+                    util.clamp(params:get(pattern_slice .. p_sampler.loop.name) + d / 100, 0, 1))
             end
         end
     end
@@ -819,13 +819,13 @@ function redraw()
     local screenWidth = 128
     local screenHeight = 64
     local pattern = params:get("selected_pattern")
-    local selected_step = params:get("selected_step")
+    local selected_slice = params:get("selected_slice")
 
     pages:redraw()
 
     if pages.index == 1 then
 
-        local playing_step = playing_step
+        local playing_slice = playing_slice
 
         -- pattern
         screen.level(2)
@@ -833,79 +833,79 @@ function redraw()
         screen.text_center("pattern " .. pattern)
 
         -- Determine the size of each square on the x-axis
-        local stepSizeX = 6
-        local stepSizeY = 6
+        local sliceSizeX = 6
+        local sliceSizeY = 6
 
         -- Calculate the number of rows and columns to form the grid
         local numColumns = 16
         local numRows = 8
 
         -- Calculate the starting position of the grid to center it on the screen
-        local startX = (screenWidth - (numColumns * stepSizeX)) / 2 - stepSizeX
-        local startY = (screenHeight - (numRows * stepSizeY)) / 2 - stepSizeY
+        local startX = (screenWidth - (numColumns * sliceSizeX)) / 2 - sliceSizeX
+        local startY = (screenHeight - (numRows * sliceSizeY)) / 2 - sliceSizeY
 
         -- Full grid
         for row = 1, numRows do
             for col = 1, numColumns do
-                local stepX = startX + col * stepSizeX
-                local stepY = startY + row * stepSizeY
+                local sliceX = startX + col * sliceSizeX
+                local sliceY = startY + row * sliceSizeY
 
-                screen.rect(stepX, stepY, stepSizeX, stepSizeY)
+                screen.rect(sliceX, sliceY, sliceSizeX, sliceSizeY)
                 screen.level(1)
                 screen.stroke()
             end
         end
 
-        -- Enabled steps
+        -- Enabled slices
         for row = 1, numRows do
             for col = 1, numColumns do
-                local stepX = startX + col * stepSizeX
-                local stepY = startY + row * stepSizeY
+                local sliceX = startX + col * sliceSizeX
+                local sliceY = startY + row * sliceSizeY
 
-                if patterns[pattern].steps[(row - 1) * numColumns + col].enabled then
-                    screen.rect(stepX, stepY, stepSizeX, stepSizeY)
+                if patterns[pattern].slices[(row - 1) * numColumns + col].enabled then
+                    screen.rect(sliceX, sliceY, sliceSizeX, sliceSizeY)
                     screen.level(5)
                     screen.stroke()
                 end
             end
         end
 
-        -- Altered steps
+        -- Altered slices
         for row = 1, numRows do
             for col = 1, numColumns do
-                local stepX = startX + col * stepSizeX
-                local stepY = startY + row * stepSizeY
+                local sliceX = startX + col * sliceSizeX
+                local sliceY = startY + row * sliceSizeY
 
-                if patterns[pattern].steps[(row - 1) * numColumns + col].altered then
-                    screen.rect(stepX + 1, stepY + 1, stepSizeX - 2, stepSizeY - 2)
+                if patterns[pattern].slices[(row - 1) * numColumns + col].altered then
+                    screen.rect(sliceX + 1, sliceY + 1, sliceSizeX - 2, sliceSizeY - 2)
                     screen.level(15)
                     screen.stroke()
                 end
             end
         end
 
-        -- Playing step
+        -- Playing slice
         for row = 1, numRows do
             for col = 1, numColumns do
-                local stepX = startX + col * stepSizeX
-                local stepY = startY + row * stepSizeY
+                local sliceX = startX + col * sliceSizeX
+                local sliceY = startY + row * sliceSizeY
 
-                if (row - 1) * numColumns + col == playing_step then
-                    screen.rect(stepX + 2, stepY + 2, 2, 2)
-                    screen.level(playing_step_screen_brightness)
+                if (row - 1) * numColumns + col == playing_slice then
+                    screen.rect(sliceX + 2, sliceY + 2, 2, 2)
+                    screen.level(playing_slice_screen_brightness)
                     screen.stroke()
                 end
             end
         end
 
-        -- Selected steps
+        -- Selected slices
         for row = 1, numRows do
             for col = 1, numColumns do
-                local stepX = startX + col * stepSizeX
-                local stepY = startY + row * stepSizeY
+                local sliceX = startX + col * sliceSizeX
+                local sliceY = startY + row * sliceSizeY
 
-                if (row - 1) * numColumns + col == selected_step then
-                    screen.rect(stepX, stepY, stepSizeX, stepSizeY)
+                if (row - 1) * numColumns + col == selected_slice then
+                    screen.rect(sliceX, sliceY, sliceSizeX, sliceSizeY)
                     screen.level(15)
                     screen.stroke()
                 end
@@ -918,62 +918,62 @@ function redraw()
         screen.move(90, 5)
         screen.text_right("pos ")
         screen.move(95, 5)
-        if playing_step > 0 then
-            screen.text(playing_step)
+        if playing_slice > 0 then
+            screen.text(playing_slice)
         else
             screen.text("-")
         end
 
         -- params
-        local pattern_step = "p" .. pattern .. "s" .. selected_step
+        local pattern_slice = "p" .. pattern .. "s" .. selected_slice
 
         screen.level(selected_screen_param == 1 and 15 or 2)
         screen.move(40, 5)
-        screen.text_right("step:")
+        screen.text_right("slice:")
         screen.move(45, 5)
-        screen.text(selected_step)
+        screen.text(selected_slice)
 
         screen.level(selected_screen_param == 2 and 15 or 2)
         screen.move(40, 15)
         screen.text_right("atk:")
         screen.move(45, 15)
-        screen.text(params:get(pattern_step .. p_sampler.attack.name))
+        screen.text(params:get(pattern_slice .. p_sampler.attack.name))
 
         screen.level(selected_screen_param == 3 and 15 or 2)
         screen.move(40, 25)
         screen.text_right("len:")
         screen.move(45, 25)
-        screen.text(params:get(pattern_step .. p_sampler.length.name))
+        screen.text(params:get(pattern_slice .. p_sampler.length.name))
 
         screen.level(selected_screen_param == 4 and 15 or 2)
         screen.move(40, 35)
         screen.text_right("lvl:")
         screen.move(45, 35)
-        screen.text(params:get(pattern_step .. p_sampler.level.name))
+        screen.text(params:get(pattern_slice .. p_sampler.level.name))
 
         screen.level(selected_screen_param == 5 and 15 or 2)
         screen.move(40, 45)
         screen.text_right("rate:")
         screen.move(45, 45)
-        screen.text(params:get(pattern_step .. p_sampler.playback_rate.name))
+        screen.text(params:get(pattern_slice .. p_sampler.playback_rate.name))
 
         screen.level(selected_screen_param == 6 and 15 or 2)
         screen.move(40, 55)
         screen.text_right("rFreq:")
         screen.move(45, 55)
-        screen.text(params:get(pattern_step .. p_sampler.rand_freq.name))
+        screen.text(params:get(pattern_slice .. p_sampler.rand_freq.name))
 
         screen.level(selected_screen_param == 7 and 15 or 2)
         screen.move(90, 15)
         screen.text_right("rLen:")
         screen.move(95, 15)
-        screen.text(params:get(pattern_step .. p_sampler.rand_length_amount.name))
+        screen.text(params:get(pattern_slice .. p_sampler.rand_length_amount.name))
 
         screen.level(selected_screen_param == 8 and 15 or 2)
         screen.move(90, 25)
         screen.text_right("rLenQ:")
         screen.move(95, 25)
-        local rand_length_unquantized = params:get(pattern_step .. p_sampler.rand_length_unquantized.name)
+        local rand_length_unquantized = params:get(pattern_slice .. p_sampler.rand_length_unquantized.name)
         if rand_length_unquantized <= 0 then
             screen.text("f")
         elseif rand_length_unquantized >= 1 then
@@ -986,19 +986,19 @@ function redraw()
         screen.move(90, 35)
         screen.text_right("rPan:")
         screen.move(95, 35)
-        screen.text(params:get(pattern_step .. p_sampler.rand_pan_amount.name))
+        screen.text(params:get(pattern_slice .. p_sampler.rand_pan_amount.name))
 
         screen.level(selected_screen_param == 10 and 15 or 2)
         screen.move(90, 45)
         screen.text_right("rel:")
         screen.move(95, 45)
-        screen.text(params:get(pattern_step .. p_sampler.release.name))
+        screen.text(params:get(pattern_slice .. p_sampler.release.name))
 
         screen.level(selected_screen_param == 11 and 15 or 2)
         screen.move(90, 55)
         screen.text_right("loop:")
         screen.move(95, 55)
-        local loop = params:get(pattern_step .. p_sampler.loop.name)
+        local loop = params:get(pattern_slice .. p_sampler.loop.name)
         if loop <= 0 then
             screen.text("f")
         elseif loop >= 1 then
@@ -1013,8 +1013,8 @@ function redraw()
         screen.move(90, 5)
         screen.text_right("pos ")
         screen.move(95, 5)
-        if playing_step > 0 then
-            screen.text(playing_step)
+        if playing_slice > 0 then
+            screen.text(playing_slice)
         else
             screen.text("-")
         end
@@ -1150,7 +1150,7 @@ end
 function g.key(x, y, z)
     if z == 1 then -- if a grid key is pressed...
         local key = (y - 1) * 16 + x
-        params:set("selected_step", key)
+        params:set("selected_slice", key)
 
         keys_counter[x][y] = clock.run(long_press, x, y) -- start the long press counter for that coordinate!
     elseif z == 0 then -- otherwise, if a grid key is released...
@@ -1169,7 +1169,7 @@ function long_press(x, y) -- define a long press
 end
 
 function short_press(x, y) -- define a short press
-    local index = (y - 1) * 16 + x -- calculate the index in steps based on the x and y coordinates
+    local index = (y - 1) * 16 + x -- calculate the index in slices based on the x and y coordinates
     params:set("enabled" .. index, params:get("enabled" .. index) ~ 1)
     grid_dirty = true
 end
@@ -1188,45 +1188,45 @@ function grid_redraw()
     local pattern = params:get("selected_pattern")
     g:all(0)
 
-    for i = 1, #patterns[pattern].steps do
-        if patterns[pattern].steps[i].altered then
+    for i = 1, #patterns[pattern].slices do
+        if patterns[pattern].slices[i].altered then
             g:led(leds[i].x, leds[i].y, 8)
         end
 
-        if patterns[pattern].steps[i].enabled then
+        if patterns[pattern].slices[i].enabled then
             g:led(leds[i].x, leds[i].y, 15)
         end
     end
 
-    if playing_step > 0 then
-        g:led(leds[playing_step].x, leds[playing_step].y, playing_step_led_brightness)
+    if playing_slice > 0 then
+        g:led(leds[playing_slice].x, leds[playing_slice].y, playing_slice_led_brightness)
     end
 
     g:refresh()
 end
 
-function playing_step_led_clock()
+function playing_slice_led_clock()
     local direction = 1 -- 1 for increasing, -1 for decreasing
     while true do
         clock.sleep(1 / 15)
-        playing_step_led_brightness = playing_step_led_brightness + direction
-        if playing_step_led_brightness >= 15 then
+        playing_slice_led_brightness = playing_slice_led_brightness + direction
+        if playing_slice_led_brightness >= 15 then
             direction = -1
-        elseif playing_step_led_brightness <= 0 then
+        elseif playing_slice_led_brightness <= 0 then
             direction = 1
         end
         grid_dirty = true
     end
 end
 
-function playing_step_screen_clock()
+function playing_slice_screen_clock()
     local direction = 1 -- 1 for increasing, -1 for decreasing
     while true do
         clock.sleep(1 / 15)
-        playing_step_screen_brightness = playing_step_screen_brightness + direction
-        if playing_step_screen_brightness >= 15 then
+        playing_slice_screen_brightness = playing_slice_screen_brightness + direction
+        if playing_slice_screen_brightness >= 15 then
             direction = -1
-        elseif playing_step_screen_brightness <= 0 then
+        elseif playing_slice_screen_brightness <= 0 then
             direction = 1
         end
         screen_dirty = true
