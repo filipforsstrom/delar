@@ -278,7 +278,6 @@ function init_params()
         if x > 0 or x < 0 then
             if #rotations < 1 then
                 table.insert(rotations, x)
-                -- params:set("selected_slice", params:get("selected_slice") + x)
             end
         end
         params:set("rotation", 0)
@@ -295,21 +294,21 @@ function init_params()
     params:set_action("num_slices", function(x)
         engine.set_num_slices(x)
     end)
-    params:hide("num_slices")
+    -- params:hide("num_slices")
     params:add_number("selected_pattern", "pattern", 1, max_num_patterns, 1)
     params:set_action("selected_pattern", function(x)
         sequence = get_active_slices(patterns[x].slices)
     end)
     params:hide("selected_pattern")
-    params:add_number("selected_slice", "slice", 1, max_num_slices, 1)
-    params:set_action("selected_slice", function(x)
-        if x > params:get("num_slices") then
-            params:set("selected_slice", params:get("num_slices"))
-        end
-        grid_dirty = true
-        screen_dirty = true
-    end)
-    params:hide("selected_slice")
+    params:add_number("selected_slice", "slice", 1, params:get("num_slices"), 1, nil, true)
+    -- params:set_action("selected_slice", function(x)
+    --     if x > params:get("num_slices") then
+    --         params:set("selected_slice", params:get("num_slices"))
+    --     end
+    --     grid_dirty = true
+    --     screen_dirty = true
+    -- end)
+    -- params:hide("selected_slice")
 
     attack = controlspec.def {
         min = 0.01, -- the minimum value
@@ -530,6 +529,10 @@ function rotate(x)
             params:set("p" .. pattern .. "s" .. i .. param, all_params[i][param])
         end
     end
+
+    -- move selected slice in the direction of the rotation
+    params:set("selected_slice", params:get("selected_slice") + x)
+
 end
 
 function params_not_default(slice)
@@ -716,7 +719,7 @@ function enc(n, d)
             if alt_key then
                 params:set("selected_pattern", util.clamp(params:get("selected_pattern") + d, 1, max_num_patterns))
             else
-                params:set("selected_slice", util.clamp(selected_slice + d, 1, params:get("num_slices")))
+                params:set("selected_slice", selected_slice + d)
             end
         end
     end
@@ -728,7 +731,7 @@ function enc(n, d)
 
         if n == 3 then
             if selected_screen_param == 1 then
-                params:set("selected_slice", util.clamp(selected_slice + d, 1, params:get("num_slices")))
+                params:set("selected_slice", selected_slice + d)
             elseif selected_screen_param == 2 then
                 params:set(pattern_slice .. p_sampler.attack.name,
                     util.clamp(params:get(pattern_slice .. p_sampler.attack.name) + d / 100, 0.01, 1))
