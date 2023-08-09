@@ -28,7 +28,7 @@ end
 function Rotation:rotate(x)
     local params_to_rotate = {"enabled", "altered", p_sampler.attack.name, p_sampler.length.name, p_sampler.level.name,
                               p_sampler.loop.name, p_sampler.playback_rate.name, p_sampler.rand_freq.name,
-                              p_sampler.rand_length_amount.name, p_sampler.rand_length_unquantized.name,
+                              p_sampler.rand_start_amount.name, p_sampler.rand_end_probability.name,
                               p_sampler.rand_pan_amount.name, p_sampler.release.name}
     local num_steps = params:get("num_steps")
     print(num_steps)

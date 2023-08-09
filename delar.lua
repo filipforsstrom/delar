@@ -84,12 +84,12 @@ p_sampler = {
         name = "rand_freq",
         default = 1
     },
-    rand_length_amount = {
-        name = "rand_length_amount",
+    rand_start_amount = {
+        name = "rand_start_amount",
         default = 0
     },
-    rand_length_unquantized = {
-        name = "rand_length_unquantized",
+    rand_end_probability = {
+        name = "rand_end_probability",
         default = 0
     },
     rand_pan_amount = {
@@ -357,14 +357,14 @@ function init_params()
         min = 0.0,
         max = 1.0,
         step = 0.001,
-        default = p_sampler.rand_length_amount.default,
+        default = p_sampler.rand_start_amount.default,
         quantum = 0.002
     }
     rand_length_unquantized = controlspec.def {
         min = 0.0,
         max = 1.0,
         step = 0.01,
-        default = p_sampler.rand_length_unquantized.default,
+        default = p_sampler.rand_end_probability.default,
         quantum = 0.002
     }
     rand_pan_amount = controlspec.def {
@@ -395,8 +395,8 @@ function init_params()
     params:add_control(p_sampler.level.name, "level", percentage)
     params:add_control(p_sampler.loop.name, "loop", percentage)
     params:add_control(p_sampler.rand_freq.name, "rand freq", percentage)
-    params:add_control(p_sampler.rand_length_amount.name, "rand length", percentage)
-    params:add_control(p_sampler.rand_length_unquantized.name, "unquantize rand length", percentage)
+    params:add_control(p_sampler.rand_start_amount.name, "rand length", percentage)
+    params:add_control(p_sampler.rand_end_probability.name, "unquantize rand length", percentage)
     params:add_control(p_sampler.rand_pan_amount.name, "rand pan", percentage)
     params:add_control(p_sampler.playback_rate.name, "playback rate", percentage)
     params:add_control(p_sampler.release.name, "release", percentage)
@@ -405,8 +405,8 @@ function init_params()
     params:hide(p_sampler.level.name)
     params:hide(p_sampler.loop.name)
     params:hide(p_sampler.rand_freq.name)
-    params:hide(p_sampler.rand_length_amount.name)
-    params:hide(p_sampler.rand_length_unquantized.name)
+    params:hide(p_sampler.rand_start_amount.name)
+    params:hide(p_sampler.rand_end_probability.name)
     params:hide(p_sampler.rand_pan_amount.name)
     params:hide(p_sampler.playback_rate.name)
     params:hide(p_sampler.release.name)
@@ -458,15 +458,15 @@ function init_params()
                 patterns[i].slices[j].rand_freq = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
-            params:add_control("p" .. i .. "s" .. j .. p_sampler.rand_length_amount.name, "rand length",
+            params:add_control("p" .. i .. "s" .. j .. p_sampler.rand_start_amount.name, "rand length",
                 rand_length_amount)
-            params:set_action("p" .. i .. "s" .. j .. p_sampler.rand_length_amount.name, function(x)
+            params:set_action("p" .. i .. "s" .. j .. p_sampler.rand_start_amount.name, function(x)
                 patterns[i].slices[j].rand_length_amount = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
-            params:add_control("p" .. i .. "s" .. j .. p_sampler.rand_length_unquantized.name, "unquantize rand length",
+            params:add_control("p" .. i .. "s" .. j .. p_sampler.rand_end_probability.name, "unquantize rand length",
                 rand_length_unquantized)
-            params:set_action("p" .. i .. "s" .. j .. p_sampler.rand_length_unquantized.name, function(x)
+            params:set_action("p" .. i .. "s" .. j .. p_sampler.rand_end_probability.name, function(x)
                 patterns[i].slices[j].rand_length_unquantized = x
                 params:set("p" .. i .. "s" .. j .. "altered", params:get("p" .. i .. "s" .. j .. "altered") ~ 1)
             end)
@@ -500,7 +500,7 @@ function rotate(x)
     local pattern = params:get("selected_pattern")
     local params_to_rotate = {"enabled", "altered", p_sampler.attack.name, p_sampler.length.name, p_sampler.level.name,
                               p_sampler.loop.name, p_sampler.playback_rate.name, p_sampler.rand_freq.name,
-                              p_sampler.rand_length_amount.name, p_sampler.rand_length_unquantized.name,
+                              p_sampler.rand_start_amount.name, p_sampler.rand_end_probability.name,
                               p_sampler.rand_pan_amount.name, p_sampler.release.name}
     local num_slices = params:get("num_slices")
 
@@ -536,7 +536,7 @@ function params_not_default(slice)
     local pattern = params:get("selected_pattern")
     local pattern_slice = "p" .. pattern .. "s" .. slice
     local params_to_check = {p_sampler.attack, p_sampler.length, p_sampler.level, p_sampler.loop, p_sampler.rand_freq,
-                             p_sampler.rand_length_amount, p_sampler.rand_length_unquantized, p_sampler.rand_pan_amount,
+                             p_sampler.rand_start_amount, p_sampler.rand_end_probability, p_sampler.rand_pan_amount,
                              p_sampler.playback_rate, p_sampler.release}
     for _, param in ipairs(params_to_check) do
         if params:get(pattern_slice .. param.name) ~= param.default then
@@ -590,7 +590,7 @@ end
 function set_all_params_default(slice)
     local pattern_slice = "p" .. params:get("selected_pattern") .. "s" .. slice
     local params_to_set = {p_sampler.attack, p_sampler.length, p_sampler.level, p_sampler.loop, p_sampler.rand_freq,
-                           p_sampler.rand_length_amount, p_sampler.rand_length_unquantized, p_sampler.rand_pan_amount,
+                           p_sampler.rand_start_amount, p_sampler.rand_end_probability, p_sampler.rand_pan_amount,
                            p_sampler.playback_rate, p_sampler.release}
     for _, param in ipairs(params_to_set) do
         params:set(pattern_slice .. param.name, param.default)
@@ -599,7 +599,7 @@ end
 
 function set_all_offset_default()
     local params_to_set = {p_sampler.attack, p_sampler.length, p_sampler.level, p_sampler.loop, p_sampler.rand_freq,
-                           p_sampler.rand_length_amount, p_sampler.rand_length_unquantized, p_sampler.rand_pan_amount,
+                           p_sampler.rand_start_amount, p_sampler.rand_end_probability, p_sampler.rand_pan_amount,
                            p_sampler.playback_rate, p_sampler.release}
     for _, param in ipairs(params_to_set) do
         params:set(param.name, 0)
@@ -668,9 +668,8 @@ function send_next_slice(slice)
     local pattern = params:get("selected_pattern")
     local pattern_slice = "p" .. pattern .. "s" .. slice
     local params_to_check = {p_sampler.attack.name, p_sampler.loop.name, p_sampler.length.name, p_sampler.level.name,
-                             p_sampler.playback_rate.name, p_sampler.rand_freq.name, p_sampler.rand_length_amount.name,
-                             p_sampler.rand_length_unquantized.name, p_sampler.rand_pan_amount.name,
-                             p_sampler.release.name}
+                             p_sampler.playback_rate.name, p_sampler.rand_freq.name, p_sampler.rand_start_amount.name,
+                             p_sampler.rand_end_probability.name, p_sampler.rand_pan_amount.name, p_sampler.release.name}
     local engine_params = {}
     for i, param in ipairs(params_to_check) do
         local slice_value = params:get(pattern_slice .. param)
@@ -678,12 +677,12 @@ function send_next_slice(slice)
         local offset = params:get(param)
         local offset_slice_value = slice_value + (offset / 100) * (range[2] - range[1])
 
-        if param == p_sampler.rand_length_unquantized.name or param == p_sampler.loop.name then
+        if param == p_sampler.rand_end_probability.name or param == p_sampler.loop.name then
             -- If the parameter is rand_length_unquantized or loop,
             -- randomly set the offset_slice_value to either 0 or 1
             -- unless it's already 0 or 1
             offset_slice_value = (offset_slice_value == 0 or offset_slice_value == 1) and offset_slice_value or
-                                    (math.random() < offset_slice_value and 1 or 0)
+                                     (math.random() < offset_slice_value and 1 or 0)
         end
 
         local clamped_slice_value = util.clamp(offset_slice_value, range[1], range[2])
@@ -746,11 +745,11 @@ function enc(n, d)
                 params:set(pattern_slice .. p_sampler.rand_freq.name,
                     util.clamp(params:get(pattern_slice .. p_sampler.rand_freq.name) + d / 10, 0, 100))
             elseif selected_screen_param == 7 then
-                params:set(pattern_slice .. p_sampler.rand_length_amount.name,
-                    util.clamp(params:get(pattern_slice .. p_sampler.rand_length_amount.name) + d / 1000, 0, 1))
+                params:set(pattern_slice .. p_sampler.rand_start_amount.name,
+                    util.clamp(params:get(pattern_slice .. p_sampler.rand_start_amount.name) + d / 1000, 0, 1))
             elseif selected_screen_param == 8 then
-                params:set(pattern_slice .. p_sampler.rand_length_unquantized.name, util.clamp(
-                    params:get(pattern_slice .. p_sampler.rand_length_unquantized.name) + d / 100, 0, 1))
+                params:set(pattern_slice .. p_sampler.rand_end_probability.name,
+                    util.clamp(params:get(pattern_slice .. p_sampler.rand_end_probability.name) + d / 100, 0, 1))
             elseif selected_screen_param == 9 then
                 params:set(pattern_slice .. p_sampler.rand_pan_amount.name,
                     util.clamp(params:get(pattern_slice .. p_sampler.rand_pan_amount.name) + d / 100, 0, 1))
@@ -783,11 +782,11 @@ function enc(n, d)
                 params:set(p_sampler.rand_freq.name,
                     util.clamp(params:get(p_sampler.rand_freq.name) + d / 10, -100, 100))
             elseif selected_screen_param == 7 then
-                params:set(p_sampler.rand_length_amount.name,
-                    util.clamp(params:get(p_sampler.rand_length_amount.name) + d / 10, -100, 100))
+                params:set(p_sampler.rand_start_amount.name,
+                    util.clamp(params:get(p_sampler.rand_start_amount.name) + d / 10, -100, 100))
             elseif selected_screen_param == 8 then
-                params:set(p_sampler.rand_length_unquantized.name,
-                    util.clamp(params:get(p_sampler.rand_length_unquantized.name) + d / 10, -100, 100))
+                params:set(p_sampler.rand_end_probability.name,
+                    util.clamp(params:get(p_sampler.rand_end_probability.name) + d / 10, -100, 100))
             elseif selected_screen_param == 9 then
                 params:set(p_sampler.rand_pan_amount.name,
                     util.clamp(params:get(p_sampler.rand_pan_amount.name) + d / 10, -100, 100))
@@ -965,15 +964,15 @@ function redraw()
 
         screen.level(selected_screen_param == 7 and 15 or 2)
         screen.move(90, 15)
-        screen.text_right("rLen:")
+        screen.text_right("rStart:")
         screen.move(95, 15)
-        screen.text(params:get(pattern_slice .. p_sampler.rand_length_amount.name))
+        screen.text(params:get(pattern_slice .. p_sampler.rand_start_amount.name))
 
         screen.level(selected_screen_param == 8 and 15 or 2)
         screen.move(90, 25)
-        screen.text_right("rLenQ:")
+        screen.text_right("rEnd:")
         screen.move(95, 25)
-        local rand_length_unquantized = params:get(pattern_slice .. p_sampler.rand_length_unquantized.name)
+        local rand_length_unquantized = params:get(pattern_slice .. p_sampler.rand_end_probability.name)
         if rand_length_unquantized <= 0 then
             screen.text("f")
         elseif rand_length_unquantized >= 1 then
@@ -1081,9 +1080,9 @@ function redraw()
 
         screen.level(selected_screen_param == 7 and 15 or 2)
         screen.move(90, 15)
-        screen.text_right("rLen:")
+        screen.text_right("rStart:")
         screen.move(95, 15)
-        local rand_length_amount = params:get(p_sampler.rand_length_amount.name)
+        local rand_length_amount = params:get(p_sampler.rand_start_amount.name)
         if rand_length_amount <= -100 or rand_length_amount >= 100 then
             screen.text(math.floor(rand_length_amount))
         else
@@ -1092,9 +1091,9 @@ function redraw()
 
         screen.level(selected_screen_param == 8 and 15 or 2)
         screen.move(90, 25)
-        screen.text_right("rLenQ:")
+        screen.text_right("rEnd:")
         screen.move(95, 25)
-        local rand_length_unquantized = params:get(p_sampler.rand_length_unquantized.name)
+        local rand_length_unquantized = params:get(p_sampler.rand_end_probability.name)
         if rand_length_unquantized <= -100 or rand_length_unquantized >= 100 then
             screen.text(math.floor(rand_length_unquantized))
         else
