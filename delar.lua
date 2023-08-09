@@ -550,13 +550,15 @@ function params_not_default(slice)
 end
 
 function key(n, z)
-    if n == 1 and z == 1 then
-        alt_key = true
-    else
-        alt_key = false
+    if n == 1 then
+        alt_key = z == 1
     end
 
-    if n == 2 and z == 1 then
+    if n == 2 and z == 1 and alt_key then
+        params:set("rotate", params:get("rotate") == 0 and 1 or 0)
+    end
+
+    if n == 2 and z == 1 and not alt_key then
         if is_playing then
             stop_engine()
         else
