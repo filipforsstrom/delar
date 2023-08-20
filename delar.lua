@@ -153,8 +153,8 @@ function init()
     params:set("p6s1enabled", 1)
     params:set("p7s1enabled", 1)
     params:set("p8s1enabled", 1)
-    engine.setSample(sample_path .. "delar/piano1.wav")
-    is_playing = true
+    -- engine.setSample(sample_path .. "delar/piano1.wav")
+    -- is_playing = true
     -- engine.set_num_slices(max_num_slices)
 
     screen_dirty = true
