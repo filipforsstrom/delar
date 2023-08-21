@@ -279,7 +279,6 @@ function init_filter_params()
 end
 
 function init_params()
-    -- params:add_group("rotation", 2)
     params:add_number("rotation", "rotation", -1, 1, 0)
     params:set_action("rotation", function(x)
         if x > 0 or x < 0 then
@@ -289,8 +288,9 @@ function init_params()
         end
         params:set("rotation", 0)
     end)
-    -- params:hide("rotation")
+    params:hide("rotation")
     params:add_number("rotate", "rotate", 0, 1, 0)
+    params:hide("rotate")
 
     params:add_file("sample", "sample", sample_path)
     params:set_action("sample", function(x)
@@ -301,7 +301,7 @@ function init_params()
     params:set_action("num_slices", function(x)
         engine.set_num_slices(x)
     end)
-    -- params:hide("num_slices")
+    params:hide("num_slices")
     params:add_number("selected_pattern", "pattern", 1, max_num_patterns, 1)
     params:set_action("selected_pattern", function(x)
         sequence = get_active_slices(patterns[x].slices)
@@ -315,7 +315,7 @@ function init_params()
     --     grid_dirty = true
     --     screen_dirty = true
     -- end)
-    -- params:hide("selected_slice")
+    params:hide("selected_slice")
 
     attack = controlspec.def {
         min = 0.01, -- the minimum value
@@ -396,6 +396,7 @@ function init_params()
     }
 
     -- offsets
+    -- params:add_group("offsets", num_synth_params)
     params:add_control(p_sampler.attack.name, "attack", percentage)
     params:add_control(p_sampler.length.name, "length", percentage)
     params:add_control(p_sampler.level.name, "level", percentage)
@@ -406,21 +407,21 @@ function init_params()
     params:add_control(p_sampler.rand_pan_amount.name, "rand pan", percentage)
     params:add_control(p_sampler.playback_rate.name, "playback rate", percentage)
     params:add_control(p_sampler.release.name, "release", percentage)
-    params:hide(p_sampler.attack.name)
-    params:hide(p_sampler.length.name)
-    params:hide(p_sampler.level.name)
-    params:hide(p_sampler.loop.name)
-    params:hide(p_sampler.rand_freq.name)
-    params:hide(p_sampler.rand_start_amount.name)
-    params:hide(p_sampler.rand_end_probability.name)
-    params:hide(p_sampler.rand_pan_amount.name)
-    params:hide(p_sampler.playback_rate.name)
-    params:hide(p_sampler.release.name)
+    -- params:hide(p_sampler.attack.name)
+    -- params:hide(p_sampler.length.name)
+    -- params:hide(p_sampler.level.name)
+    -- params:hide(p_sampler.loop.name)
+    -- params:hide(p_sampler.rand_freq.name)
+    -- params:hide(p_sampler.rand_start_amount.name)
+    -- params:hide(p_sampler.rand_end_probability.name)
+    -- params:hide(p_sampler.rand_pan_amount.name)
+    -- params:hide(p_sampler.playback_rate.name)
+    -- params:hide(p_sampler.release.name)
 
     for i = 1, max_num_patterns do
         for j = 1, max_num_slices do
             params:add_group("pattern " .. i .. " slice " .. j, num_synth_params)
-            -- params:hide("pattern " .. i .. " slice " .. j)
+            params:hide("pattern " .. i .. " slice " .. j)
             params:add_number("p" .. i .. "s" .. j .. "enabled", "enabled", 0, 1, 0)
             params:set_action("p" .. i .. "s" .. j .. "enabled", function(x)
                 slices[j].enabled = (x == 1)
