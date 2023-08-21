@@ -1,6 +1,11 @@
 -- delar
 -- v1.0.0 @ljudvagg
 -- llllllll.co/t/
+--
+-- always looping
+-- sample player
+--
+-- load a sample in params menu
 -- 
 -- encoders:
 -- E1: select page
