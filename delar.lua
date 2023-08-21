@@ -1,6 +1,14 @@
+-- delar
+-- v1.0.0 @ljudvagg
+-- llllllll.co/t/
+-- 
+-- encoders:
 -- E1: select page
 -- E2: rotate slices
 -- E3: select slice
+-- K1+E3: change pattern
+--
+-- keys:
 -- K2: play/stop
 -- K1+K2: auto rotate
 -- K3(slice page): toggle slice
