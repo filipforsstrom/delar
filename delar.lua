@@ -1,6 +1,6 @@
 -- delar
 -- v1.0.0 @ljudvagg
--- llllllll.co/t/
+-- llllllll.co/t/delar/63767
 --
 -- always looping
 -- sample player
