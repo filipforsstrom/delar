@@ -1,3 +1,10 @@
+-- E1: select page
+-- E2: rotate slices
+-- E3: select slice
+-- K2: play/stop
+-- K1+K2: auto rotate
+-- K3(slice page): toggle slice
+-- K3(other pages): default values
 engine.name = 'DelarSequencer'
 tabutil = require "tabutil"
 ui = require "ui"
