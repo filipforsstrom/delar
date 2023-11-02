@@ -60,14 +60,23 @@ Hold `K1` and turn `E3` on the first page to adjust the pattern.
 ### Values
 
 `atk`: Attack phase
+
 `len`: Length
+
 `lvl`: Level
+
 `rate`: Playback rate in octaves
+
 `rFreq`: Speed of random panning
+
 `rStart`: Amount of random start position
+
 `rEnd`: Sets if rStart also should set a random end position (true = always, false = never, numbers = probability to be true)
+
 `rPan`: Amount of random panning
+
 `rel`: Release phase
+
 `loop`: Preserve slice length when rate changes (true = always, false = never, numbers = probability)
 
 ## Download
