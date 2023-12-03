@@ -20,6 +20,8 @@
 -- K3(other pages): default values
 engine.name = 'DelarSequencer'
 tabutil = require "tabutil"
+filesystem = include "lib/filesystem"
+parameters = include "lib/parameters"
 ui = require "ui"
 local pages
 g = grid.connect()
@@ -27,7 +29,6 @@ leds = {}
 keys_counter = {}
 alt_key = false
 
-sample_path = paths.home .. "/dust/audio/"
 is_playing = false
 playing_slice = 0
 playing_slice_led_brightness = 15
@@ -161,6 +162,7 @@ function init()
         keys_counter[x] = {} -- create a x state counter.
     end
 
+    parameters.init()
     init_filter_params()
     init_params()
 
@@ -173,9 +175,6 @@ function init()
     params:set("p6s1enabled", 1)
     params:set("p7s1enabled", 1)
     params:set("p8s1enabled", 1)
-    -- engine.setSample(sample_path .. "delar/piano1.wav")
-    -- is_playing = true
-    -- engine.set_num_slices(max_num_slices)
 
     screen_dirty = true
     grid_dirty = true
@@ -305,11 +304,6 @@ function init_params()
     params:add_number("rotate", "rotate", 0, 1, 0)
     params:hide("rotate")
 
-    params:add_file("sample", "sample", sample_path)
-    params:set_action("sample", function(x)
-        engine.setSample(x)
-        is_playing = true
-    end)
     params:add_number("num_slices", "num slices", 1, max_num_slices, 128)
     params:set_action("num_slices", function(x)
         engine.set_num_slices(x)
