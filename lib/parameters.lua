@@ -121,14 +121,9 @@ function parameters.init()
     parameters:init_sampler_params()
 
     params:bang()
-    params:set("p1s1enabled", 1)
-    params:set("p2s1enabled", 1)
-    params:set("p3s1enabled", 1)
-    params:set("p4s1enabled", 1)
-    params:set("p5s1enabled", 1)
-    params:set("p6s1enabled", 1)
-    params:set("p7s1enabled", 1)
-    params:set("p8s1enabled", 1)
+    for p = 1, max_num_patterns do
+        params:set("p" .. p .. "s1enabled", 1)
+    end
 end
 
 function parameters:init_sampler_params()
