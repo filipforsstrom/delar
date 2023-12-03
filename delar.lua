@@ -38,7 +38,6 @@ sequence_position = 1
 slices = {}
 max_num_patterns = 8
 max_num_slices = 128
-num_synth_params = 12
 selected_screen_param = 1
 num_screen_params = 11
 rotations = {}
