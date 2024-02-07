@@ -94,7 +94,7 @@ DelarSequencer {
 		SynthDef.new(\SamplePlayer_mono, {
 			var buf = \buffer.ir;
 			var rand = LFNoise1.kr(\randFreq.ir(0.5));
-			var rate = \rate.ir.max(0.25);
+			var rate = BufRateScale.kr(buf) * \rate.ir.max(0.25);
 			var duration = \duration.ir;
 			var attack = \attack.ir(0.01).max(0.01).min(duration);
 			var release = \release.ir(0.01).max(0.01).min(duration - attack);
@@ -110,7 +110,7 @@ DelarSequencer {
 		SynthDef.new(\SamplePlayer_stereo, {
 			var buf = \buffer.ir;
 			var rand = LFNoise1.kr(\randFreq.ir(0.5));
-			var rate = \rate.ir.max(0.25);
+			var rate = BufRateScale.kr(buf) * \rate.ir.max(0.25);
 			var duration = \duration.ir;
 			var attack = \attack.ir(0.01).max(0.01).min(duration);
 			var release = \release.ir(0.01).max(0.01).min(duration - attack);
