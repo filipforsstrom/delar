@@ -1,5 +1,5 @@
 -- delar
--- v1.0.0 @ljudvagg
+-- v1.0.1 @ljudvagg
 -- llllllll.co/t/delar/63767
 --
 -- always looping
